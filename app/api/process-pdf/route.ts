@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import pdfParse from 'pdf-parse'
 
+export const dynamic = 'force-dynamic'
+
 export async function POST(request: NextRequest) {
   try {
     const formData = await request.formData()
