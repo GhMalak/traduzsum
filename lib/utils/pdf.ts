@@ -53,12 +53,13 @@ export function generatePDF({ title, translatedText, fileName = 'traducao', user
   yPosition += 15
 
   // Título do documento
+  const footerSpace = 55 // Espaço reservado para o footer
   doc.setTextColor(0, 0, 0)
   doc.setFontSize(18)
   doc.setFont('helvetica', 'bold')
   const titleLines = doc.splitTextToSize(title, maxWidth)
   titleLines.forEach((line: string) => {
-    if (yPosition > pageHeight - 30) {
+    if (yPosition > pageHeight - footerSpace) {
       doc.addPage()
       yPosition = margin
     }
@@ -68,7 +69,8 @@ export function generatePDF({ title, translatedText, fileName = 'traducao', user
   yPosition += 10
 
   // Texto traduzido
-  if (yPosition > pageHeight - 40) {
+  const footerSpace = 55 // Espaço reservado para o footer
+  if (yPosition > pageHeight - footerSpace) {
     doc.addPage()
     yPosition = margin
   }
@@ -87,7 +89,7 @@ export function generatePDF({ title, translatedText, fileName = 'traducao', user
   doc.setFont('helvetica', 'normal')
   const translatedLines = doc.splitTextToSize(translatedText, maxWidth - 4)
   translatedLines.forEach((line: string) => {
-    if (yPosition > pageHeight - 30) {
+    if (yPosition > pageHeight - footerSpace) {
       doc.addPage()
       yPosition = margin
     }
@@ -97,68 +99,76 @@ export function generatePDF({ title, translatedText, fileName = 'traducao', user
 
   // Rodapé em todas as páginas
   const totalPages = doc.getNumberOfPages()
-  const footerHeight = userName && userCPF ? 35 : 30
+  const footerTop = pageHeight - 45
+  const footerHeight = 45
   
   for (let i = 1; i <= totalPages; i++) {
     doc.setPage(i)
     
     // Fundo do rodapé
     doc.setFillColor(245, 247, 250)
-    doc.rect(0, pageHeight - footerHeight, pageWidth, footerHeight, 'F')
+    doc.rect(0, footerTop, pageWidth, footerHeight, 'F')
     
     // Linha superior do rodapé
     doc.setDrawColor(lightGray[0], lightGray[1], lightGray[2])
-    doc.line(0, pageHeight - footerHeight, pageWidth, pageHeight - footerHeight)
+    doc.line(0, footerTop, pageWidth, footerTop)
     
-    let yPos = pageHeight - 25
+    // Lado esquerdo do rodapé
+    let leftY = footerTop + 10
     
     // Logo/Título no rodapé
     doc.setTextColor(primaryColor[0], primaryColor[1], primaryColor[2])
-    doc.setFontSize(10)
+    doc.setFontSize(11)
     doc.setFont('helvetica', 'bold')
-    doc.text('TraduzSum', margin, yPos)
+    doc.text('TraduzSum', margin, leftY)
+    leftY += 6
     
     // Informações do usuário (segurança anti-pirataria)
     if (userName && userCPF) {
-      yPos -= 5
       doc.setTextColor(0, 0, 0)
-      doc.setFontSize(8)
+      doc.setFontSize(7)
       doc.setFont('helvetica', 'bold')
-      doc.text('Gerado por:', margin, yPos)
-      yPos -= 4
+      doc.text('Gerado por:', margin, leftY)
+      leftY += 4
       doc.setFont('helvetica', 'normal')
-      doc.text(`${userName} | CPF: ${userCPF}`, margin, yPos)
-      yPos -= 3
+      const userInfo = `${userName} | CPF: ${userCPF}`
+      const userInfoLines = doc.splitTextToSize(userInfo, pageWidth / 2 - margin - 10)
+      userInfoLines.forEach((line: string) => {
+        doc.text(line, margin, leftY)
+        leftY += 3.5
+      })
+      leftY += 2
     }
     
     // Informações de segurança
     doc.setTextColor(100, 100, 100)
+    doc.setFontSize(6)
+    doc.setFont('helvetica', 'italic')
+    const securityText = 'Documento confidencial. Uso exclusivo do destinatário.'
+    doc.text(securityText, margin, leftY, { maxWidth: pageWidth / 2 - margin - 10 })
+    
+    // Lado direito do rodapé
+    let rightY = footerTop + 10
+    
+    // Site
+    doc.setTextColor(primaryColor[0], primaryColor[1], primaryColor[2])
+    doc.setFontSize(9)
+    doc.setFont('helvetica', 'bold')
+    doc.text('www.traduzsum.com.br', pageWidth - margin, rightY, { align: 'right' })
+    rightY += 6
+    
+    // Data
+    doc.setTextColor(100, 100, 100)
     doc.setFontSize(7)
     doc.setFont('helvetica', 'normal')
-    doc.text(
-      'Documento gerado automaticamente. Este documento é confidencial e destinado exclusivamente ao destinatário.',
-      margin,
-      yPos,
-      { maxWidth: pageWidth - 2 * margin }
-    )
+    doc.text(`Gerado em ${dateStr}`, pageWidth - margin, rightY, { align: 'right' })
+    rightY += 5
     
-    // Site e número da página (lado direito)
-    yPos = pageHeight - 25
-    doc.text(
-      `www.traduzsum.com.br | Página ${i} de ${totalPages}`,
-      pageWidth - margin,
-      yPos,
-      { align: 'right' }
-    )
-    
-    // Data no rodapé
-    yPos -= 5
-    doc.text(
-      `Gerado em ${dateStr}`,
-      pageWidth - margin,
-      yPos,
-      { align: 'right' }
-    )
+    // Número da página
+    doc.setTextColor(100, 100, 100)
+    doc.setFontSize(7)
+    doc.setFont('helvetica', 'normal')
+    doc.text(`Página ${i} de ${totalPages}`, pageWidth - margin, rightY, { align: 'right' })
   }
 
   // Salvar PDF

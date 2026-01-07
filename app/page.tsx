@@ -1,28 +1,22 @@
 'use client'
 
-import { useState, useRef, useEffect } from 'react'
+import { useState, useRef } from 'react'
 import { translateJurisprudence } from './api/translate'
 import { generatePDF } from '@/lib/utils/pdf'
 import Link from 'next/link'
+import { useAuth } from '@/contexts/AuthContext'
 
 type InputMode = 'text' | 'pdf'
-type UserPlan = 'Gratuito' | 'Mensal' | 'Anual' | 'Créditos'
 
-// Mock: Em produção, isso viria de autenticação/contexto
-const getUserPlan = (): UserPlan => {
-  // Por padrão, assume plano gratuito
-  // Em produção: buscar do contexto de autenticação
-  return 'Gratuito'
-}
-
-const canUploadPDF = (plan: UserPlan): boolean => {
-  return plan !== 'Gratuito'
+const canUploadPDF = (plan: string | null): boolean => {
+  return plan !== 'Gratuito' && plan !== null
 }
 
 export default function Home() {
-  const [userPlan] = useState<UserPlan>(getUserPlan())
-  const [userName, setUserName] = useState<string | null>(null)
-  const [userCPF, setUserCPF] = useState<string | null>(null)
+  const { user, logout } = useAuth()
+  const userPlan = user?.plan || 'Gratuito'
+  const userName = user?.name || null
+  const userCPF = user?.cpf || null
   const [inputMode, setInputMode] = useState<InputMode>('text')
   const [text, setText] = useState('')
   const [result, setResult] = useState('')
@@ -30,21 +24,6 @@ export default function Home() {
   const [error, setError] = useState('')
   const [fileName, setFileName] = useState('')
   const fileInputRef = useRef<HTMLInputElement>(null)
-
-  // Buscar dados do usuário logado
-  useEffect(() => {
-    fetch('/api/auth/me')
-      .then(res => res.json())
-      .then(data => {
-        if (data.user) {
-          setUserName(data.user.name)
-          setUserCPF(data.user.cpf)
-        }
-      })
-      .catch(() => {
-        // Usuário não logado, não é erro
-      })
-  }, [])
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
@@ -142,12 +121,29 @@ export default function Home() {
             <Link href="/planos" className="text-gray-600 hover:text-primary-600 font-medium">
               Planos
             </Link>
-            <Link href="/login" className="text-gray-600 hover:text-primary-600 font-medium">
-              Entrar
-            </Link>
-            <Link href="/register" className="bg-primary-600 text-white px-4 py-2 rounded-lg hover:bg-primary-700 transition-colors font-medium">
-              Criar conta
-            </Link>
+            {user ? (
+              <>
+                <Link href="/dashboard" className="text-gray-600 hover:text-primary-600 font-medium">
+                  Dashboard
+                </Link>
+                <span className="text-gray-600">Olá, {user.name.split(' ')[0]}</span>
+                <button
+                  onClick={logout}
+                  className="text-gray-600 hover:text-primary-600 font-medium"
+                >
+                  Sair
+                </button>
+              </>
+            ) : (
+              <>
+                <Link href="/login" className="text-gray-600 hover:text-primary-600 font-medium">
+                  Entrar
+                </Link>
+                <Link href="/register" className="bg-primary-600 text-white px-4 py-2 rounded-lg hover:bg-primary-700 transition-colors font-medium">
+                  Criar conta
+                </Link>
+              </>
+            )}
           </div>
         </div>
       </nav>

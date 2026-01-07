@@ -1,8 +1,10 @@
 'use client'
 
 import Link from 'next/link'
+import { useAuth } from '@/contexts/AuthContext'
 
 export default function PlanosPage() {
+  const { user, logout } = useAuth()
   const plans = [
     {
       name: 'Gratuito',
@@ -70,12 +72,29 @@ export default function PlanosPage() {
             <Link href="/planos" className="text-primary-600 font-medium">
               Planos
             </Link>
-            <Link href="/login" className="text-gray-600 hover:text-primary-600 font-medium">
-              Entrar
-            </Link>
-            <Link href="/register" className="bg-primary-600 text-white px-4 py-2 rounded-lg hover:bg-primary-700 transition-colors font-medium">
-              Criar conta
-            </Link>
+            {user ? (
+              <>
+                <Link href="/dashboard" className="text-gray-600 hover:text-primary-600 font-medium">
+                  Dashboard
+                </Link>
+                <span className="text-gray-600">Olá, {user.name.split(' ')[0]}</span>
+                <button
+                  onClick={logout}
+                  className="text-gray-600 hover:text-primary-600 font-medium"
+                >
+                  Sair
+                </button>
+              </>
+            ) : (
+              <>
+                <Link href="/login" className="text-gray-600 hover:text-primary-600 font-medium">
+                  Entrar
+                </Link>
+                <Link href="/register" className="bg-primary-600 text-white px-4 py-2 rounded-lg hover:bg-primary-700 transition-colors font-medium">
+                  Criar conta
+                </Link>
+              </>
+            )}
           </div>
         </div>
       </nav>

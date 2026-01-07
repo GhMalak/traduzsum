@@ -3,9 +3,11 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
+import { useAuth } from '@/contexts/AuthContext'
 
 export default function LoginPage() {
   const router = useRouter()
+  const { login } = useAuth()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
@@ -29,6 +31,11 @@ export default function LoginPage() {
 
       if (!response.ok) {
         throw new Error(data.error || 'Erro ao fazer login')
+      }
+
+      // Atualizar contexto de autenticação
+      if (data.user) {
+        login(data.user)
       }
 
       // Redirecionar para dashboard ou home

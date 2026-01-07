@@ -1,19 +1,34 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
+import { useAuth } from '@/contexts/AuthContext'
+import { useRouter } from 'next/navigation'
 
 export default function DashboardPage() {
-  // Dados mockados - em produção viriam de uma API
-  const [user] = useState({
-    name: 'Usuário Exemplo',
-    email: 'usuario@exemplo.com',
-    plan: 'Gratuito' as 'Gratuito' | 'Mensal' | 'Anual' | 'Créditos',
-    credits: 10,
-    translationsToday: 1,
-    translationsLimit: 2,
-    expiresAt: null as string | null
-  })
+  const { user, logout, loading: authLoading } = useAuth()
+  const router = useRouter()
+  const [translationsToday, setTranslationsToday] = useState(1)
+  const [translationsLimit, setTranslationsLimit] = useState(2)
+  const [expiresAt, setExpiresAt] = useState<string | null>(null)
+
+  useEffect(() => {
+    if (!authLoading && !user) {
+      router.push('/login')
+    }
+  }, [user, authLoading, router])
+
+  if (authLoading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50 flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600"></div>
+      </div>
+    )
+  }
+
+  if (!user) {
+    return null
+  }
 
   const planInfo = {
     Gratuito: {
@@ -39,6 +54,7 @@ export default function DashboardPage() {
   }
 
   const currentPlan = planInfo[user.plan]
+  const userCredits = user.credits || 0
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50">
@@ -55,7 +71,10 @@ export default function DashboardPage() {
             <Link href="/dashboard" className="text-primary-600 font-medium">
               Dashboard
             </Link>
-            <button className="text-gray-600 hover:text-primary-600 font-medium">
+            <button
+              onClick={logout}
+              className="text-gray-600 hover:text-primary-600 font-medium"
+            >
               Sair
             </button>
           </div>
@@ -100,17 +119,17 @@ export default function DashboardPage() {
               <div className="mb-4">
                 <div className="flex justify-between text-sm text-gray-600 mb-2">
                   <span>Usadas</span>
-                  <span>{user.translationsToday} / {user.translationsLimit}</span>
+                  <span>{translationsToday} / {translationsLimit}</span>
                 </div>
                 <div className="w-full bg-gray-200 rounded-full h-3">
                   <div
                     className="bg-primary-600 h-3 rounded-full transition-all"
-                    style={{ width: `${(user.translationsToday / user.translationsLimit) * 100}%` }}
+                    style={{ width: `${(translationsToday / translationsLimit) * 100}%` }}
                   ></div>
                 </div>
               </div>
               <p className="text-sm text-gray-600">
-                {user.translationsLimit - user.translationsToday} traduções restantes hoje
+                {translationsLimit - translationsToday} traduções restantes hoje
               </p>
             </div>
           )}
@@ -119,7 +138,7 @@ export default function DashboardPage() {
           {user.plan === 'Créditos' && (
             <div className="bg-white rounded-2xl shadow-lg p-6">
               <h2 className="text-xl font-semibold text-gray-800 mb-4">Seus Créditos</h2>
-              <div className="text-4xl font-bold text-primary-600 mb-2">{user.credits}</div>
+              <div className="text-4xl font-bold text-primary-600 mb-2">{userCredits}</div>
               <p className="text-sm text-gray-600 mb-4">créditos disponíveis</p>
               <Link
                 href="/planos"
@@ -138,11 +157,11 @@ export default function DashboardPage() {
                 <p className="text-sm text-gray-600">Status</p>
                 <p className="text-lg font-semibold text-green-600">Ativa</p>
               </div>
-              {user.expiresAt && (
+              {expiresAt && (
                 <div className="mb-4">
                   <p className="text-sm text-gray-600">Próxima cobrança</p>
                   <p className="text-lg font-semibold text-gray-900">
-                    {new Date(user.expiresAt).toLocaleDateString('pt-BR')}
+                    {new Date(expiresAt).toLocaleDateString('pt-BR')}
                   </p>
                 </div>
               )}
@@ -203,7 +222,7 @@ export default function DashboardPage() {
 
         <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
           <p className="text-yellow-800 text-sm">
-            <strong>Nota:</strong> Este dashboard é uma versão de demonstração. O sistema de autenticação e gerenciamento de planos está em desenvolvimento.
+            <strong>Nota:</strong> O sistema de gerenciamento de planos e estatísticas está em desenvolvimento.
           </p>
         </div>
       </div>

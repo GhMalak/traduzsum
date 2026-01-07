@@ -4,9 +4,11 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { formatCPF, validateCPF } from '@/lib/cpf'
+import { useAuth } from '@/contexts/AuthContext'
 
 export default function RegisterPage() {
   const router = useRouter()
+  const { login } = useAuth()
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')
   const [cpf, setCpf] = useState('')
@@ -56,6 +58,11 @@ export default function RegisterPage() {
 
       if (!response.ok) {
         throw new Error(data.error || 'Erro ao criar conta')
+      }
+
+      // Atualizar contexto de autenticação
+      if (data.user) {
+        login(data.user)
       }
 
       // Redirecionar para dashboard
