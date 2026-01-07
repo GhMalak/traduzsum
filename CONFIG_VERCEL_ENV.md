@@ -47,6 +47,17 @@ SMTP_PASS
 - **Valor:** Sua senha de app do Gmail (veja como gerar abaixo)
 - **Environments:** ✅ Production, ✅ Preview, ✅ Development
 
+#### ✅ Variável Obrigatória para Banco de Dados:
+
+```
+DATABASE_URL
+```
+- **Valor:** URL de conexão do seu banco de dados PostgreSQL (Supabase)
+- **Formato:** `postgresql://usuario:senha@host:porta/database?sslmode=require`
+- **Exemplo Supabase:** `postgresql://postgres.xxxxx:senha@aws-0-sa-east-1.pooler.supabase.com:6543/postgres?sslmode=require`
+- **Environments:** ✅ Production, ✅ Preview, ✅ Development
+- **⚠️ CRÍTICO:** Esta variável é obrigatória para o build funcionar!
+
 #### ✅ Outras Variáveis Importantes:
 
 ```
@@ -67,7 +78,40 @@ GROQ_API_KEY
 - **Valor:** Sua chave da API Groq
 - **Environments:** ✅ Production, ✅ Preview, ✅ Development
 
-### 4. Como Gerar Senha de App do Gmail
+### 4. Como Obter a DATABASE_URL do Supabase
+
+Se você está usando Supabase como banco de dados:
+
+1. Acesse o painel do Supabase: https://supabase.com/dashboard
+2. Selecione seu projeto
+3. Vá em **Settings** → **Database**
+4. Role até a seção **"Connection string"**
+5. Selecione a aba **"URI"** (não "Session mode" ou "Transaction")
+6. Copie a string que aparece (formato: `postgresql://postgres:[PASSWORD]@db.xxxxx.supabase.co:5432/postgres`)
+7. **IMPORTANTE**: Substitua `[PASSWORD]` pela senha real do seu banco de dados
+8. Se sua senha tem caracteres especiais, faça URL encoding:
+   - `@` → `%40`
+   - `#` → `%23`
+   - `$` → `%24`
+   - `&` → `%26`
+   - `+` → `%2B`
+   - `=` → `%3D`
+   - `?` → `%3F`
+   - `/` → `%2F`
+   - ` ` (espaço) → `%20`
+9. Cole a URL completa no campo `DATABASE_URL` na Vercel
+
+**Exemplo:**
+```
+postgresql://postgres:MinhaSenh@123@db.xxxxx.supabase.co:5432/postgres
+```
+
+**⚠️ IMPORTANTE:** 
+- Não use colchetes `[]` na senha
+- Se a senha tem caracteres especiais, faça URL encoding
+- A URL deve estar completa e válida
+
+### 5. Como Gerar Senha de App do Gmail
 
 Se você está usando Gmail:
 
@@ -83,7 +127,7 @@ Se você está usando Gmail:
 
 **⚠️ Importante:** Use a **senha de app**, não a senha normal da sua conta Google!
 
-### 5. Salvar e Fazer Redeploy
+### 6. Salvar e Fazer Redeploy
 
 1. Após adicionar todas as variáveis, clique em **Save** (Salvar)
 2. Vá para a aba **Deployments**
@@ -91,7 +135,7 @@ Se você está usando Gmail:
 4. Selecione **Redeploy**
 5. Aguarde o deploy terminar
 
-### 6. Verificar se Funcionou
+### 7. Verificar se Funcionou
 
 1. Após o redeploy, teste a recuperação de senha
 2. Verifique os logs na Vercel:
@@ -138,6 +182,7 @@ Após configurar, os logs devem mostrar:
 
 Antes de testar, verifique:
 
+- [ ] `DATABASE_URL` configurado (⚠️ OBRIGATÓRIO para build)
 - [ ] `SMTP_HOST` configurado
 - [ ] `SMTP_PORT` configurado
 - [ ] `SMTP_USER` configurado (email completo)
