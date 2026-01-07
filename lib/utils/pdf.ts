@@ -16,11 +16,11 @@ export function generatePDF({ title, originalText, translatedText, fileName = 't
   let yPosition = margin
 
   // Cores do site
-  const primaryColor = [7, 89, 133] // #075985 (primary-800)
-  const lightGray = [229, 231, 235] // gray-200
+  const primaryColor: [number, number, number] = [7, 89, 133] // #075985 (primary-800)
+  const lightGray: [number, number, number] = [229, 231, 235] // gray-200
 
   // Logo e cabeçalho
-  doc.setFillColor(...primaryColor)
+  doc.setFillColor(primaryColor[0], primaryColor[1], primaryColor[2])
   doc.rect(0, 0, pageWidth, 40, 'F')
   
   // Título do site
@@ -73,7 +73,7 @@ export function generatePDF({ title, originalText, translatedText, fileName = 't
       yPosition = margin
     }
 
-    doc.setFillColor(...lightGray)
+    doc.setFillColor(lightGray[0], lightGray[1], lightGray[2])
     doc.roundedRect(margin, yPosition - 5, maxWidth, 8, 2, 2, 'F')
     
     doc.setTextColor(0, 0, 0)
@@ -102,7 +102,7 @@ export function generatePDF({ title, originalText, translatedText, fileName = 't
     yPosition = margin
   }
 
-  doc.setFillColor(...primaryColor)
+  doc.setFillColor(primaryColor[0], primaryColor[1], primaryColor[2])
   doc.roundedRect(margin, yPosition - 5, maxWidth, 8, 2, 2, 'F')
   
   doc.setTextColor(255, 255, 255)
@@ -130,7 +130,7 @@ export function generatePDF({ title, originalText, translatedText, fileName = 't
     doc.setPage(i)
     
     // Linha de rodapé
-    doc.setDrawColor(...lightGray)
+    doc.setDrawColor(lightGray[0], lightGray[1], lightGray[2])
     doc.line(margin, pageHeight - 25, pageWidth - margin, pageHeight - 25)
     
     // Informações de segurança
