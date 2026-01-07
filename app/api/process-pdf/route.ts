@@ -34,6 +34,7 @@ export async function POST(request: NextRequest) {
 
     const pdfData = await pdfParse(buffer)
     const text = pdfData.text
+    const numPages = pdfData.numpages
 
     if (!text || text.trim().length === 0) {
       return NextResponse.json(
@@ -42,7 +43,15 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    return NextResponse.json({ text })
+    // Validar limite de 30 páginas para planos pagos
+    if (numPages > 30) {
+      return NextResponse.json(
+        { error: `O PDF tem ${numPages} páginas. O limite máximo é de 30 páginas para planos pagos. Por favor, reduza o tamanho do arquivo ou divida em partes menores.` },
+        { status: 400 }
+      )
+    }
+
+    return NextResponse.json({ text, pages: numPages })
   } catch (error: any) {
     console.error('Erro ao processar PDF:', error)
     return NextResponse.json(

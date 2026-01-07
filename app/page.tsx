@@ -2,10 +2,25 @@
 
 import { useState, useRef } from 'react'
 import { translateJurisprudence } from './api/translate'
+import { generatePDF } from '@/lib/utils/pdf'
+import Link from 'next/link'
 
 type InputMode = 'text' | 'pdf'
+type UserPlan = 'Gratuito' | 'Mensal' | 'Anual' | 'Créditos'
+
+// Mock: Em produção, isso viria de autenticação/contexto
+const getUserPlan = (): UserPlan => {
+  // Por padrão, assume plano gratuito
+  // Em produção: buscar do contexto de autenticação
+  return 'Gratuito'
+}
+
+const canUploadPDF = (plan: UserPlan): boolean => {
+  return plan !== 'Gratuito'
+}
 
 export default function Home() {
+  const [userPlan] = useState<UserPlan>(getUserPlan())
   const [inputMode, setInputMode] = useState<InputMode>('text')
   const [text, setText] = useState('')
   const [result, setResult] = useState('')
@@ -17,6 +32,15 @@ export default function Home() {
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (!file) return
+
+    // Verificar se o plano permite upload de PDF
+    if (!canUploadPDF(userPlan)) {
+      setError('Upload de PDF não está disponível no plano gratuito. Faça upgrade para usar esta funcionalidade!')
+      if (fileInputRef.current) {
+        fileInputRef.current.value = ''
+      }
+      return
+    }
 
     if (file.type !== 'application/pdf') {
       setError('Por favor, selecione um arquivo PDF')
@@ -91,9 +115,29 @@ export default function Home() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50">
+      {/* Navigation */}
+      <nav className="bg-white shadow-sm border-b">
+        <div className="container mx-auto px-4 py-4 max-w-6xl flex justify-between items-center">
+          <Link href="/" className="text-2xl font-bold text-gray-900">
+            Traduz<span className="text-primary-600">Sum</span>
+          </Link>
+          <div className="flex gap-4 items-center">
+            <Link href="/planos" className="text-gray-600 hover:text-primary-600 font-medium">
+              Planos
+            </Link>
+            <Link href="/login" className="text-gray-600 hover:text-primary-600 font-medium">
+              Entrar
+            </Link>
+            <Link href="/register" className="bg-primary-600 text-white px-4 py-2 rounded-lg hover:bg-primary-700 transition-colors font-medium">
+              Criar conta
+            </Link>
+          </div>
+        </div>
+      </nav>
+
       <div className="container mx-auto px-4 py-8 max-w-6xl">
         {/* Header */}
-        <header className="text-center mb-12">
+        <header className="text-center mb-12 mt-8">
           <h1 className="text-5xl font-bold text-gray-900 mb-4">
             Traduz<span className="text-primary-600">Sum</span>
           </h1>
@@ -130,24 +174,32 @@ export default function Home() {
               <button
                 type="button"
                 onClick={() => {
+                  if (!canUploadPDF(userPlan)) {
+                    setError('Upload de PDF não está disponível no plano gratuito. Faça upgrade para usar esta funcionalidade!')
+                    setInputMode('text')
+                    return
+                  }
                   setInputMode('pdf')
                   setError('')
                   fileInputRef.current?.click()
                 }}
                 className={`flex-1 py-2 px-4 rounded-md font-medium transition-colors ${
-                  inputMode === 'pdf'
+                  !canUploadPDF(userPlan)
+                    ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                    : inputMode === 'pdf'
                     ? 'bg-white text-primary-600 shadow-sm'
                     : 'text-gray-600 hover:text-gray-900'
                 }`}
-                disabled={loading}
+                disabled={loading || !canUploadPDF(userPlan)}
+                title={!canUploadPDF(userPlan) ? 'Disponível apenas em planos pagos' : ''}
               >
-                Enviar PDF
+                Enviar PDF {!canUploadPDF(userPlan) && '🔒'}
               </button>
             </div>
 
             <form onSubmit={handleSubmit} className="space-y-4">
               {/* PDF Upload */}
-              {inputMode === 'pdf' && (
+              {inputMode === 'pdf' && canUploadPDF(userPlan) && (
                 <div className="mb-4">
                   <input
                     ref={fileInputRef}
@@ -236,6 +288,21 @@ export default function Home() {
             {error && (
               <div className="mt-4 p-4 bg-red-50 border border-red-200 rounded-lg text-red-700">
                 {error}
+                {!canUploadPDF(userPlan) && error.includes('PDF') && (
+                  <Link href="/planos" className="block mt-2 text-primary-600 hover:text-primary-700 font-medium underline">
+                    Ver planos disponíveis →
+                  </Link>
+                )}
+              </div>
+            )}
+            {userPlan === 'Gratuito' && (
+              <div className="mt-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                <p className="text-blue-800 text-sm mb-2">
+                  <strong>Plano Gratuito:</strong> Apenas traduções de texto colado.
+                </p>
+                <Link href="/planos" className="text-blue-600 hover:text-blue-700 font-medium text-sm underline">
+                  Faça upgrade para usar PDFs →
+                </Link>
               </div>
             )}
           </div>
@@ -272,12 +339,30 @@ export default function Home() {
               )}
             </div>
             {result && (
-              <button
-                onClick={() => navigator.clipboard.writeText(result)}
-                className="mt-4 w-full py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium rounded-lg transition-colors"
-              >
-                Copiar tradução
-              </button>
+              <div className="mt-4 flex gap-3">
+                <button
+                  onClick={() => navigator.clipboard.writeText(result)}
+                  className="flex-1 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium rounded-lg transition-colors"
+                >
+                  Copiar tradução
+                </button>
+                <button
+                  onClick={() => {
+                    generatePDF({
+                      title: 'Tradução Jurídica Simplificada',
+                      originalText: text,
+                      translatedText: result,
+                      fileName: 'traducao'
+                    })
+                  }}
+                  className="flex-1 py-2 bg-primary-600 hover:bg-primary-700 text-white font-medium rounded-lg transition-colors flex items-center justify-center gap-2"
+                >
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                  </svg>
+                  Baixar PDF
+                </button>
+              </div>
             )}
           </div>
         </div>
