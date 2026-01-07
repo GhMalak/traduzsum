@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { validateLogin, generateToken } from '@/lib/auth'
 
+// Força renderização dinâmica (usa cookies)
+export const dynamic = 'force-dynamic'
+
 export async function POST(request: NextRequest) {
   try {
     const { email, password } = await request.json()

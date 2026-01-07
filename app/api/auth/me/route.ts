@@ -2,6 +2,9 @@ import { NextRequest, NextResponse } from 'next/server'
 import { verifyToken, findUserById } from '@/lib/auth'
 import { formatCPF } from '@/lib/cpf'
 
+// Força renderização dinâmica (usa cookies)
+export const dynamic = 'force-dynamic'
+
 export async function GET(request: NextRequest) {
   try {
     const token = request.cookies.get('auth-token')?.value
