@@ -126,7 +126,7 @@ export async function getAllUsers(): Promise<User[]> {
     orderBy: { createdAt: 'desc' }
   })
 
-  return users.map(user => ({
+  return users.map((user: { id: string; name: string; email: string; cpf: string; password: string; plan: string; credits: number | null; createdAt: Date }) => ({
     id: user.id,
     name: user.name,
     email: user.email,
