@@ -6,20 +6,17 @@ const globalForPrisma = globalThis as unknown as {
 
 function createPrismaClient(): PrismaClient {
   // Verificar se DATABASE_URL está disponível
+  // Se não estiver, lançar erro apenas em desenvolvimento
+  // Em produção no Vercel, a variável deve estar configurada
   if (!process.env.DATABASE_URL) {
-    // Durante o build, pode não ter DATABASE_URL, então retornamos um cliente "mock"
-    // que só será usado se tentar fazer uma query (o que não deve acontecer durante o build)
-    if (process.env.NODE_ENV === 'production' && process.env.VERCEL) {
-      // No Vercel durante o build, não temos DATABASE_URL ainda
-      // Mas o Prisma Client precisa ser criado mesmo assim para o build passar
-      // A conexão só acontecerá em runtime quando a variável estiver disponível
-      return new PrismaClient({
-        log: ['error'],
-      })
+    if (process.env.NODE_ENV === 'development') {
+      throw new Error(
+        'DATABASE_URL não encontrada. Verifique se a variável de ambiente está configurada no arquivo .env.local'
+      )
     }
-    throw new Error(
-      'DATABASE_URL não encontrada. Verifique se a variável de ambiente está configurada.'
-    )
+    // Em produção, se não tiver DATABASE_URL, o Prisma vai falhar ao tentar conectar
+    // Mas permitimos que o cliente seja criado para não quebrar o build
+    console.warn('⚠️ DATABASE_URL não encontrada. Configure a variável no Vercel.')
   }
 
   return new PrismaClient({
