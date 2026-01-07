@@ -94,7 +94,7 @@ export default function PlanosPage() {
           {plans.map((plan, index) => (
             <div
               key={index}
-z              className={`bg-white rounded-2xl shadow-xl p-8 relative transition-all duration-300 hover:shadow-2xl hover:-translate-y-1 ${
+              className={`bg-white rounded-2xl shadow-xl p-8 relative transition-all duration-300 hover:shadow-2xl hover:-translate-y-1 ${
                 plan.popular 
                   ? 'ring-4 ring-primary-500 scale-105 border-2 border-primary-500' 
                   : 'border border-gray-200'
