@@ -7,6 +7,7 @@ export const dynamic = 'force-dynamic'
 // Lista de emails admin (em produção, isso deve vir de um banco de dados)
 const ADMIN_EMAILS = [
   'admin@traduzsum.com.br',
+  'gustavo.calasan@gmail.com',
   // Adicione mais emails admin aqui
 ]
 
