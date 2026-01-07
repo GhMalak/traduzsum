@@ -2,12 +2,13 @@ import jsPDF from 'jspdf'
 
 export interface PDFOptions {
   title: string
-  originalText?: string
   translatedText: string
   fileName?: string
+  userName?: string
+  userCPF?: string
 }
 
-export function generatePDF({ title, originalText, translatedText, fileName = 'traducao' }: PDFOptions) {
+export function generatePDF({ title, translatedText, fileName = 'traducao', userName, userCPF }: PDFOptions) {
   const doc = new jsPDF()
   const pageWidth = doc.internal.pageSize.getWidth()
   const pageHeight = doc.internal.pageSize.getHeight()
@@ -64,37 +65,7 @@ export function generatePDF({ title, originalText, translatedText, fileName = 't
     doc.text(line, margin, yPosition)
     yPosition += 7
   })
-  yPosition += 5
-
-  // Texto original (se fornecido)
-  if (originalText && originalText.trim()) {
-    if (yPosition > pageHeight - 40) {
-      doc.addPage()
-      yPosition = margin
-    }
-
-    doc.setFillColor(lightGray[0], lightGray[1], lightGray[2])
-    doc.roundedRect(margin, yPosition - 5, maxWidth, 8, 2, 2, 'F')
-    
-    doc.setTextColor(0, 0, 0)
-    doc.setFontSize(12)
-    doc.setFont('helvetica', 'bold')
-    doc.text('Texto Original:', margin + 2, yPosition)
-    yPosition += 10
-
-    doc.setFontSize(10)
-    doc.setFont('helvetica', 'normal')
-    const originalLines = doc.splitTextToSize(originalText, maxWidth - 4)
-    originalLines.forEach((line: string) => {
-      if (yPosition > pageHeight - 30) {
-        doc.addPage()
-        yPosition = margin
-      }
-      doc.text(line, margin + 2, yPosition)
-      yPosition += 5
-    })
-    yPosition += 10
-  }
+  yPosition += 10
 
   // Texto traduzido
   if (yPosition > pageHeight - 40) {
@@ -126,29 +97,66 @@ export function generatePDF({ title, originalText, translatedText, fileName = 't
 
   // Rodapé em todas as páginas
   const totalPages = doc.getNumberOfPages()
+  const footerHeight = userName && userCPF ? 35 : 30
+  
   for (let i = 1; i <= totalPages; i++) {
     doc.setPage(i)
     
-    // Linha de rodapé
+    // Fundo do rodapé
+    doc.setFillColor(245, 247, 250)
+    doc.rect(0, pageHeight - footerHeight, pageWidth, footerHeight, 'F')
+    
+    // Linha superior do rodapé
     doc.setDrawColor(lightGray[0], lightGray[1], lightGray[2])
-    doc.line(margin, pageHeight - 25, pageWidth - margin, pageHeight - 25)
+    doc.line(0, pageHeight - footerHeight, pageWidth, pageHeight - footerHeight)
+    
+    let yPos = pageHeight - 25
+    
+    // Logo/Título no rodapé
+    doc.setTextColor(primaryColor[0], primaryColor[1], primaryColor[2])
+    doc.setFontSize(10)
+    doc.setFont('helvetica', 'bold')
+    doc.text('TraduzSum', margin, yPos)
+    
+    // Informações do usuário (segurança anti-pirataria)
+    if (userName && userCPF) {
+      yPos -= 5
+      doc.setTextColor(0, 0, 0)
+      doc.setFontSize(8)
+      doc.setFont('helvetica', 'bold')
+      doc.text('Gerado por:', margin, yPos)
+      yPos -= 4
+      doc.setFont('helvetica', 'normal')
+      doc.text(`${userName} | CPF: ${userCPF}`, margin, yPos)
+      yPos -= 3
+    }
     
     // Informações de segurança
     doc.setTextColor(100, 100, 100)
-    doc.setFontSize(8)
+    doc.setFontSize(7)
     doc.setFont('helvetica', 'normal')
     doc.text(
-      'Este documento foi gerado pelo TraduzSum. Para mais informações, acesse: www.traduzsum.com.br',
+      'Documento gerado automaticamente. Este documento é confidencial e destinado exclusivamente ao destinatário.',
       margin,
-      pageHeight - 15,
-      { maxWidth: pageWidth - 2 * margin, align: 'center' }
+      yPos,
+      { maxWidth: pageWidth - 2 * margin }
     )
     
-    // Número da página
+    // Site e número da página (lado direito)
+    yPos = pageHeight - 25
     doc.text(
-      `Página ${i} de ${totalPages}`,
+      `www.traduzsum.com.br | Página ${i} de ${totalPages}`,
       pageWidth - margin,
-      pageHeight - 10,
+      yPos,
+      { align: 'right' }
+    )
+    
+    // Data no rodapé
+    yPos -= 5
+    doc.text(
+      `Gerado em ${dateStr}`,
+      pageWidth - margin,
+      yPos,
       { align: 'right' }
     )
   }

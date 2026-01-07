@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { translateJurisprudence } from './api/translate'
 import { generatePDF } from '@/lib/utils/pdf'
 import Link from 'next/link'
@@ -21,6 +21,8 @@ const canUploadPDF = (plan: UserPlan): boolean => {
 
 export default function Home() {
   const [userPlan] = useState<UserPlan>(getUserPlan())
+  const [userName, setUserName] = useState<string | null>(null)
+  const [userCPF, setUserCPF] = useState<string | null>(null)
   const [inputMode, setInputMode] = useState<InputMode>('text')
   const [text, setText] = useState('')
   const [result, setResult] = useState('')
@@ -28,6 +30,21 @@ export default function Home() {
   const [error, setError] = useState('')
   const [fileName, setFileName] = useState('')
   const fileInputRef = useRef<HTMLInputElement>(null)
+
+  // Buscar dados do usuário logado
+  useEffect(() => {
+    fetch('/api/auth/me')
+      .then(res => res.json())
+      .then(data => {
+        if (data.user) {
+          setUserName(data.user.name)
+          setUserCPF(data.user.cpf)
+        }
+      })
+      .catch(() => {
+        // Usuário não logado, não é erro
+      })
+  }, [])
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
@@ -350,9 +367,10 @@ export default function Home() {
                   onClick={() => {
                     generatePDF({
                       title: 'Tradução Jurídica Simplificada',
-                      originalText: text,
                       translatedText: result,
-                      fileName: 'traducao'
+                      fileName: 'traducao',
+                      userName: userName || undefined,
+                      userCPF: userCPF || undefined
                     })
                   }}
                   className="flex-1 py-2 bg-primary-600 hover:bg-primary-700 text-white font-medium rounded-lg transition-colors flex items-center justify-center gap-2"
