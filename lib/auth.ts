@@ -1,10 +1,11 @@
 import bcrypt from 'bcryptjs'
 import jwt from 'jsonwebtoken'
+import { prisma } from './db'
 
 const JWT_SECRET = process.env.JWT_SECRET || 'seu-secret-super-seguro-mude-em-producao'
 
-// Mock de banco de dados em memória (em produção usar banco real)
-interface User {
+// Interface para compatibilidade
+export interface User {
   id: string
   name: string
   email: string
@@ -15,16 +16,6 @@ interface User {
   createdAt: Date
 }
 
-interface ResetToken {
-  token: string
-  email: string
-  expiresAt: Date
-}
-
-// Armazenamento em memória (substituir por banco de dados em produção)
-const users: User[] = []
-const resetTokens: ResetToken[] = []
-
 export async function hashPassword(password: string): Promise<string> {
   return bcrypt.hash(password, 10)
 }
@@ -34,7 +25,7 @@ export async function comparePassword(password: string, hash: string): Promise<b
 }
 
 export function generateToken(userId: string, email: string): string {
-  return jwt.sign({ userId, email }, JWT_SECRET, { expiresIn: '7d' })
+  return jwt.sign({ userId, email }, JWT_SECRET, { expiresIn: '30d' })
 }
 
 export function verifyToken(token: string): { userId: string; email: string } | null {
@@ -52,41 +43,99 @@ export function generateResetToken(): string {
 
 export async function createUser(name: string, email: string, cpf: string, password: string): Promise<User> {
   // Verificar se email já existe
-  if (users.find(u => u.email.toLowerCase() === email.toLowerCase())) {
+  const existingEmail = await prisma.user.findUnique({
+    where: { email: email.toLowerCase() }
+  })
+  if (existingEmail) {
     throw new Error('Email já está em uso')
   }
 
   // Verificar se CPF já existe
   const cleanCPF = cpf.replace(/[^\d]/g, '')
-  if (users.find(u => u.cpf === cleanCPF)) {
+  const existingCPF = await prisma.user.findUnique({
+    where: { cpf: cleanCPF }
+  })
+  if (existingCPF) {
     throw new Error('CPF já está cadastrado')
   }
 
   const hashedPassword = await hashPassword(password)
-  const user: User = {
-    id: Date.now().toString(),
-    name,
-    email: email.toLowerCase(),
-    cpf: cleanCPF,
-    password: hashedPassword,
-    plan: 'Gratuito',
-    createdAt: new Date()
-  }
+  
+  const user = await prisma.user.create({
+    data: {
+      name,
+      email: email.toLowerCase(),
+      cpf: cleanCPF,
+      password: hashedPassword,
+      plan: 'Gratuito',
+    }
+  })
 
-  users.push(user)
-  return user
+  return {
+    id: user.id,
+    name: user.name,
+    email: user.email,
+    cpf: user.cpf,
+    password: user.password,
+    plan: user.plan as 'Gratuito' | 'Mensal' | 'Anual' | 'Créditos',
+    credits: user.credits || undefined,
+    createdAt: user.createdAt
+  }
 }
 
 export async function findUserByEmail(email: string): Promise<User | null> {
-  return users.find(u => u.email.toLowerCase() === email.toLowerCase()) || null
+  const user = await prisma.user.findUnique({
+    where: { email: email.toLowerCase() }
+  })
+
+  if (!user) return null
+
+  return {
+    id: user.id,
+    name: user.name,
+    email: user.email,
+    cpf: user.cpf,
+    password: user.password,
+    plan: user.plan as 'Gratuito' | 'Mensal' | 'Anual' | 'Créditos',
+    credits: user.credits || undefined,
+    createdAt: user.createdAt
+  }
 }
 
 export async function findUserById(id: string): Promise<User | null> {
-  return users.find(u => u.id === id) || null
+  const user = await prisma.user.findUnique({
+    where: { id }
+  })
+
+  if (!user) return null
+
+  return {
+    id: user.id,
+    name: user.name,
+    email: user.email,
+    cpf: user.cpf,
+    password: user.password,
+    plan: user.plan as 'Gratuito' | 'Mensal' | 'Anual' | 'Créditos',
+    credits: user.credits || undefined,
+    createdAt: user.createdAt
+  }
 }
 
-export function getAllUsers(): User[] {
-  return [...users] // Retorna cópia para não modificar o array original
+export async function getAllUsers(): Promise<User[]> {
+  const users = await prisma.user.findMany({
+    orderBy: { createdAt: 'desc' }
+  })
+
+  return users.map(user => ({
+    id: user.id,
+    name: user.name,
+    email: user.email,
+    cpf: user.cpf,
+    password: user.password,
+    plan: user.plan as 'Gratuito' | 'Mensal' | 'Anual' | 'Créditos',
+    credits: user.credits || undefined,
+    createdAt: user.createdAt
+  }))
 }
 
 export async function validateLogin(email: string, password: string): Promise<User | null> {
@@ -97,62 +146,76 @@ export async function validateLogin(email: string, password: string): Promise<Us
   return isValid ? user : null
 }
 
-export function saveResetToken(email: string, token: string): void {
+export async function saveResetToken(email: string, token: string): Promise<void> {
   // Remove tokens expirados
   const now = new Date()
-  const validTokens = resetTokens.filter(t => t.expiresAt > now)
+  await prisma.resetToken.deleteMany({
+    where: {
+      expiresAt: {
+        lt: now
+      }
+    }
+  })
   
   // Adiciona novo token (válido por 1 hora)
-  validTokens.push({
-    token,
-    email: email.toLowerCase(),
-    expiresAt: new Date(now.getTime() + 60 * 60 * 1000) // 1 hora
+  await prisma.resetToken.create({
+    data: {
+      token,
+      email: email.toLowerCase(),
+      expiresAt: new Date(now.getTime() + 60 * 60 * 1000) // 1 hora
+    }
   })
-
-  resetTokens.length = 0
-  resetTokens.push(...validTokens)
 }
 
-export function validateResetToken(token: string): string | null {
-  const resetToken = resetTokens.find(t => t.token === token)
+export async function validateResetToken(token: string): Promise<string | null> {
+  const resetToken = await prisma.resetToken.findUnique({
+    where: { token }
+  })
+
   if (!resetToken) return null
 
   if (resetToken.expiresAt < new Date()) {
     // Remove token expirado
-    const index = resetTokens.indexOf(resetToken)
-    resetTokens.splice(index, 1)
+    await prisma.resetToken.delete({
+      where: { token }
+    })
     return null
   }
 
   return resetToken.email
 }
 
-export function deleteResetToken(token: string): void {
-  const index = resetTokens.findIndex(t => t.token === token)
-  if (index !== -1) {
-    resetTokens.splice(index, 1)
-  }
+export async function deleteResetToken(token: string): Promise<void> {
+  await prisma.resetToken.deleteMany({
+    where: { token }
+  })
 }
 
 export async function updateUserPassword(email: string, newPassword: string): Promise<void> {
   const user = await findUserByEmail(email)
   if (!user) throw new Error('Usuário não encontrado')
 
-  user.password = await hashPassword(newPassword)
+  const hashedPassword = await hashPassword(newPassword)
+  await prisma.user.update({
+    where: { email: email.toLowerCase() },
+    data: { password: hashedPassword }
+  })
 }
 
-export function updateUserPlan(userId: string, plan: 'Gratuito' | 'Mensal' | 'Anual' | 'Créditos', credits?: number): void {
-  const user = users.find(u => u.id === userId)
-  if (user) {
-    user.plan = plan
-    if (credits !== undefined) {
-      user.credits = credits
+export async function updateUserPlan(userId: string, plan: 'Gratuito' | 'Mensal' | 'Anual' | 'Créditos', credits?: number): Promise<void> {
+  await prisma.user.update({
+    where: { id: userId },
+    data: {
+      plan,
+      credits: credits !== undefined ? credits : undefined
     }
-  }
+  })
 }
 
-export function getUserPlan(userId: string): 'Gratuito' | 'Mensal' | 'Anual' | 'Créditos' | null {
-  const user = users.find(u => u.id === userId)
-  return user ? user.plan : null
+export async function getUserPlan(userId: string): Promise<'Gratuito' | 'Mensal' | 'Anual' | 'Créditos' | null> {
+  const user = await prisma.user.findUnique({
+    where: { id: userId },
+    select: { plan: true }
+  })
+  return user ? (user.plan as 'Gratuito' | 'Mensal' | 'Anual' | 'Créditos') : null
 }
-

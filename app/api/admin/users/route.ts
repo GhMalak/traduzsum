@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { verifyToken, findUserById, getAllUsers } from '@/lib/auth'
+import { verifyToken, findUserById, getAllUsers, User } from '@/lib/auth'
 import { formatCPF } from '@/lib/cpf'
 
 // Força renderização dinâmica
@@ -36,10 +36,10 @@ export async function GET(request: NextRequest) {
       )
     }
 
-    const users = getAllUsers()
+    const users = await getAllUsers()
 
     return NextResponse.json({
-      users: users.map(user => ({
+      users: users.map((user: User) => ({
         id: user.id,
         name: user.name,
         email: user.email,

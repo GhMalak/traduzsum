@@ -9,13 +9,15 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@prisma/client": "^7.2.0",
     "bcryptjs": "^2.4.3",
     "groq-sdk": "^0.3.3",
-    "jspdf": "^2.5.1",
     "jsonwebtoken": "^9.0.2",
+    "jspdf": "^2.5.1",
     "next": "^14.0.4",
     "nodemailer": "^6.9.7",
     "pdf-parse": "^1.1.1",
+    "prisma": "^7.2.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0"
   },
