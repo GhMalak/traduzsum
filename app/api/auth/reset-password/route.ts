@@ -19,7 +19,7 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const email = validateResetToken(token)
+    const email = await validateResetToken(token)
 
     if (!email) {
       return NextResponse.json(
@@ -29,7 +29,7 @@ export async function POST(request: NextRequest) {
     }
 
     await updateUserPassword(email, password)
-    deleteResetToken(token)
+    await deleteResetToken(token)
 
     return NextResponse.json({
       success: true,
