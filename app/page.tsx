@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { translateJurisprudence } from './api/translate'
 import { generatePDF } from '@/lib/utils/pdf'
 import Link from 'next/link'
@@ -17,6 +17,7 @@ export default function Home() {
   const userPlan = user?.plan || 'Gratuito'
   const userName = user?.name || null
   const userCPF = user?.cpf || null
+  const [isAdmin, setIsAdmin] = useState(false)
   const [inputMode, setInputMode] = useState<InputMode>('text')
   const [text, setText] = useState('')
   const [result, setResult] = useState('')
@@ -24,6 +25,16 @@ export default function Home() {
   const [error, setError] = useState('')
   const [fileName, setFileName] = useState('')
   const fileInputRef = useRef<HTMLInputElement>(null)
+
+  // Verificar se é admin
+  useEffect(() => {
+    if (user) {
+      fetch('/api/admin/check')
+        .then(res => res.json())
+        .then(data => setIsAdmin(data.isAdmin || false))
+        .catch(() => setIsAdmin(false))
+    }
+  }, [user])
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
@@ -126,6 +137,11 @@ export default function Home() {
                 <Link href="/dashboard" className="text-gray-600 hover:text-primary-600 font-medium">
                   Dashboard
                 </Link>
+                {isAdmin && (
+                  <Link href="/admin" className="text-red-600 hover:text-red-700 font-medium">
+                    Admin
+                  </Link>
+                )}
                 <span className="text-gray-600">Olá, {user.name.split(' ')[0]}</span>
                 <button
                   onClick={logout}

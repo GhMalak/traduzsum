@@ -30,6 +30,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     // Verificar se há usuário logado ao carregar
     checkAuth()
+    
+    // Verificar novamente quando a página ganha foco (volta de outra aba)
+    const handleFocus = () => {
+      checkAuth()
+    }
+    window.addEventListener('focus', handleFocus)
+    
+    return () => {
+      window.removeEventListener('focus', handleFocus)
+    }
   }, [])
 
   const checkAuth = async () => {

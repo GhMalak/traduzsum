@@ -85,6 +85,10 @@ export async function findUserById(id: string): Promise<User | null> {
   return users.find(u => u.id === id) || null
 }
 
+export function getAllUsers(): User[] {
+  return [...users] // Retorna cópia para não modificar o array original
+}
+
 export async function validateLogin(email: string, password: string): Promise<User | null> {
   const user = await findUserByEmail(email)
   if (!user) return null
