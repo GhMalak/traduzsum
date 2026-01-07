@@ -14,6 +14,7 @@ export function generatePDF({ title, translatedText, fileName = 'traducao', user
   const pageHeight = doc.internal.pageSize.getHeight()
   const margin = 20
   const maxWidth = pageWidth - 2 * margin
+  const footerSpace = 55 // Espaço reservado para o footer
   let yPosition = margin
 
   // Cores do site
@@ -53,7 +54,6 @@ export function generatePDF({ title, translatedText, fileName = 'traducao', user
   yPosition += 15
 
   // Título do documento
-  const footerSpace = 55 // Espaço reservado para o footer
   doc.setTextColor(0, 0, 0)
   doc.setFontSize(18)
   doc.setFont('helvetica', 'bold')
@@ -69,7 +69,6 @@ export function generatePDF({ title, translatedText, fileName = 'traducao', user
   yPosition += 10
 
   // Texto traduzido
-  const footerSpace = 55 // Espaço reservado para o footer
   if (yPosition > pageHeight - footerSpace) {
     doc.addPage()
     yPosition = margin
