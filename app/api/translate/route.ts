@@ -369,18 +369,33 @@ Além da tradução, você DEVE buscar e apresentar questões relacionadas que j
    - Se houver mais questões relevantes, pode trazer até 10 questões
 
 3. **FORMATO DAS QUESTÕES:**
+   - As questões podem ser de DOIS TIPOS:
+     a) **Múltipla Escolha:** com alternativas A, B, C, D, E (ou menos alternativas conforme a questão real)
+     b) **Certo ou Errado (C/E):** questões de julgamento onde cada item é avaliado como Certo ou Errado
+   
    - Cada questão deve incluir:
-     * Texto completo da questão (enunciado)
-     * Alternativas (A, B, C, D, E) ou (Certo ou Errado)
-     * Resposta correta (gabarito)
-     * Órgão/concurso (se possível identificar: Ex: "TRF4", "TJSP", "TRE", etc.)
-     * Ano aproximado (se possível identificar)
+     * **Enunciado completo e preciso** (texto exato ou muito próximo de questões reais)
+     * **Alternativas completas:**
+       - Para múltipla escolha: A, B, C, D, E (ou o número de alternativas que a questão tiver) - texto completo de cada uma
+       - Para C/E: cada item do enunciado deve ser marcado separadamente como (C) Certo ou (E) Errado
+     * **Fonte/Órgão/Concurso** (se possível: Ex: "TJSP - 2020", "TRF4 - 2019", "TRE-RJ", "MP-SP")
+     * **Banca** (se conhecida: FGV, CESPE, VUNESP, FCC, IBFC, etc.)
+     * **Ano aproximado** (se possível identificar)
+   
+   - **IMPORTANTE:** NÃO coloque o gabarito junto com cada questão. Os gabaritos devem aparecer APENAS no final, em uma seção separada chamada "GABARITO".
 
-4. **FONTE E AUTENTICIDADE:**
-   - Busque questões REAIS que já apareceram em concursos públicos
-   - Use seu conhecimento sobre bancos de provas de concursos (FGV, CESPE, VUNESP, FCC, etc.)
-   - Priorize questões de concursos importantes (TJ, TRT, TRE, MP, DP, PF, PRF, etc.)
-   - Se não souber o ano ou órgão exato, indique "Concurso público" ou "Questão adaptada"
+4. **FONTE E AUTENTICIDADE (CRÍTICO):**
+   - **PRIORIDADE MÁXIMA:** Use questões REAIS que você conhece de bancos públicos como:
+     * QConcursos.com
+     * Gran Cursos Online
+     * TEC Concursos
+     * Questões de Concursos
+     * Outras fontes públicas de questões de concursos
+   - Use seu conhecimento sobre bancos de provas de concursos (FGV, CESPE, VUNESP, FCC, IBFC, etc.)
+   - Priorize questões de concursos importantes (TJ, TRT, TRE, MP, DP, PF, PRF, Tribunais Regionais, etc.)
+   - **NÃO invente questões completamente fictícias** - baseie-se em questões reais ou típicas que você conhece
+   - Se não souber o ano ou órgão exato, indique "Concurso público" ou "Questão típica de [banca]"
+   - Questões devem ser realistas e típicas de concursos públicos brasileiros
 
 5. **PRECISÃO DO CONTEÚDO:**
    - As questões devem testar conhecimentos sobre o MESMO assunto tratado
@@ -451,15 +466,18 @@ Após a tradução, você DEVE buscar e apresentar pelo menos 5 questões relaci
 **REQUISITOS DAS QUESTÕES:**
 1. As questões DEVEM ser EXATAMENTE relacionadas ao assunto tratado no texto original
 2. Mínimo de 5 questões, podendo chegar até 10 se houver mais questões relevantes
-3. Cada questão deve incluir:
-   - Enunciado completo da questão
-   - Todas as alternativas (A, B, C, D, E)
-   - Resposta correta (gabarito)
-   - Órgão/concurso (se possível: Ex: "TJSP", "TRF4", "TRE", "MP", etc.)
-   - Ano aproximado (se possível)
-4. Busque questões REAIS de bancas conhecidas (FGV, CESPE, VUNESP, FCC, etc.)
+3. As questões podem ser de múltipla escolha (A, B, C, D, E) ou Certo/Errado (C/E). Cada questão deve incluir:
+   - **Enunciado completo e preciso** da questão (texto exato ou muito próximo do original)
+   - **Alternativas ou itens:**
+     * Para múltipla escolha: Todas as alternativas (A, B, C, D, E ou o número que tiver) - texto completo de cada alternativa
+     * Para C/E: Cada item do enunciado separadamente, indicando se é (C) Certo ou (E) Errado
+   - **Fonte/Órgão/Concurso:** Se possível identificar: Ex: "TJSP - 2020", "TRF4 - 2019", "TRE-RJ", "MP-SP", "FGV", "CESPE", etc.
+   - **Ano:** Se possível identificar o ano aproximado
+   
+   - **IMPORTANTE:** NÃO coloque o gabarito junto com cada questão. Os gabaritos devem aparecer APENAS no final, em uma seção separada.
+4. Busque questões REAIS de bancas conhecidas (FGV, CESPE/Cebraspe, VUNESP, FCC, IBFC, etc.)
 5. O tema da questão deve estar DIRETAMENTE relacionado ao assunto buscado
-6. Priorize questões de concursos importantes (TJ, TRT, TRE, MP, DP, PF, PRF, etc.)
+6. Priorize questões de concursos importantes (TJ, TRT, TRE, MP, DP, PF, PRF, Tribunais Regionais, etc.)
 
 **FORMATO DA RESPOSTA (ESTRUTURA OBRIGATÓRIA):**
 
@@ -471,7 +489,7 @@ Após a tradução, adicione uma quebra de linha dupla e então:
 
 **QUESTÕES RELACIONADAS DE CONCURSOS PÚBLICOS**
 
-[Questão 1]
+[Questão 1 - Múltipla Escolha]
 **Enunciado:** [Texto completo da questão]
 
 A) [Alternativa A]
@@ -480,19 +498,49 @@ C) [Alternativa C]
 D) [Alternativa D]
 E) [Alternativa E]
 
-**Gabarito:** [Letra correta]
 **Fonte:** [Órgão/Concurso e ano, se conhecido]
 
-[Questão 2]
-... (repita o formato para todas as questões)
+[Questão 2 - Certo ou Errado]
+**Enunciado:** [Texto completo da questão]
+
+I. [Primeiro item do enunciado]
+II. [Segundo item do enunciado]
+III. [Terceiro item do enunciado]
+
+**Fonte:** [Órgão/Concurso e ano, se conhecido]
+
+[Questão 3]
+... (repita o formato para todas as questões - pode ser múltipla escolha ou C/E conforme o tipo da questão real - SEM GABARITO junto)
 
 ---
 
+**GABARITO**
+
+Questão 1: [Letra correta: A, B, C, D ou E]
+
+Questão 2: [Respostas: C, E, C (ou item por item: I-C, II-E, III-C)]
+
+Questão 3: [Resposta correta]
+
+... (continue para todas as questões)
+
+---
+
+**IMPORTANTE SOBRE O GABARITO:**
+- **NÃO coloque o gabarito junto com cada questão**
+- As questões devem aparecer SEM o gabarito visível
+- No final de todas as questões, adicione uma seção separada chamada "GABARITO"
+- Na seção de gabarito, liste todas as respostas corretas numeradas (Questão 1, Questão 2, etc.)
+- Para múltipla escolha: indique a letra correta (ex: "Questão 1: A")
+- Para C/E: indique as respostas (ex: "Questão 2: C, E, C" ou "Questão 2: I-C, II-E, III-C")
+
 **IMPORTANTE:**
-- Responda APENAS com o conteúdo (tradução + questões), sem introduções ou comentários meta
+- Responda APENAS com o conteúdo (tradução + questões sem gabarito + seção de gabarito no final), sem introduções ou comentários meta
 - Comece diretamente com a tradução formatada
-- Após a tradução, adicione as questões relacionadas seguindo o formato acima
-- Garanta que TODAS as questões sejam EXATAMENTE relacionadas ao assunto tratado`,
+- Após a tradução, adicione as questões relacionadas SEM gabarito
+- No final, adicione a seção "GABARITO" com todas as respostas
+- Garanta que TODAS as questões sejam EXATAMENTE relacionadas ao assunto tratado
+- Se não conseguir encontrar questões específicas sobre o tema exato, indique isso claramente`,
         },
       ],
       temperature: 0.0, // Reduzido para maior consistência e precisão
