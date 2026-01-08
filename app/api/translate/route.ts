@@ -369,6 +369,20 @@ Siga rigorosamente TODAS as instruções do sistema. Use o processo estruturado 
 - Explique termos técnicos quando necessário
 - Mantenha todos os dados, números, datas e referências exatamente como estão
 
+**FORMATAÇÃO PARA PDF (IMPORTANTE):**
+- Organize o texto em TÓPICOS PRINCIPAIS claros
+- Use estrutura hierárquica: TÓPICOS PRINCIPAIS em negrito, subtópicos e explicações em texto normal
+- Seja CONCISO: crie um resumo facilitador, não uma transcrição completa
+- Destaque os pontos mais importantes de forma clara
+- Use quebras de linha para separar tópicos
+- Formate assim:
+  **TÓPICO PRINCIPAL:** Explicação clara e acessível do tópico.
+  
+  **OUTRO TÓPICO:** Outra explicação importante.
+  
+- Se houver exceções ou condições, destaque-as claramente: **ATENÇÃO:** ou **EXCEÇÃO:**
+- Mantenha o texto compacto mas completo
+
 **TEXTO ORIGINAL:**
 
 ---
@@ -378,11 +392,14 @@ ${text}
 ---
 
 **INSTRUÇÕES FINAIS:**
-- Traduza TODO o conteúdo, sem omitir nada
+- Crie um RESUMO FACILITADOR, não uma tradução palavra por palavra
+- Organize em TÓPICOS PRINCIPAIS com explicações claras
+- Use formatação com **NEGRITO** para tópicos principais (ex: **DECISÃO:**, **REGRAS:**, **EXCEÇÕES:**)
+- Seja conciso mas completo - foque nos pontos essenciais
 - Destaque claramente TODAS as exceções e condições
 - Use linguagem acessível mas precisa
-- Responda APENAS com o texto traduzido, sem introduções ou comentários
-- Comece diretamente com o conteúdo traduzido`,
+- Responda APENAS com o texto traduzido formatado, sem introduções ou comentários
+- Comece diretamente com o conteúdo traduzido formatado`,
         },
       ],
       temperature: 0.0, // Reduzido para maior consistência e precisão

@@ -12,36 +12,58 @@ export function generatePDF({ title, translatedText, fileName = 'traducao', user
   const doc = new jsPDF()
   const pageWidth = doc.internal.pageSize.getWidth()
   const pageHeight = doc.internal.pageSize.getHeight()
-  const margin = 20
+  const margin = 15
   const maxWidth = pageWidth - 2 * margin
-  const footerSpace = 55 // Espaço reservado para o footer
+  const footerSpace = 40 // Espaço reservado para o footer (reduzido)
   let yPosition = margin
 
   // Cores do site
   const primaryColor: [number, number, number] = [7, 89, 133] // #075985 (primary-800)
+  const primaryLight: [number, number, number] = [14, 165, 233] // #0ea5e9 (primary-500)
   const lightGray: [number, number, number] = [229, 231, 235] // gray-200
+  const accentColor: [number, number, number] = [59, 130, 246] // blue-500
 
-  // Logo e cabeçalho
-  doc.setFillColor(primaryColor[0], primaryColor[1], primaryColor[2])
-  doc.rect(0, 0, pageWidth, 40, 'F')
+  // Cabeçalho clean e profissional
+  const headerHeight = 35
   
-  // Título do site
-  doc.setTextColor(255, 255, 255)
-  doc.setFontSize(24)
+  // Fundo sutil com gradiente simulado (linha colorida)
+  doc.setFillColor(primaryColor[0], primaryColor[1], primaryColor[2])
+  doc.rect(0, 0, pageWidth, 3, 'F') // Linha superior fina
+  
+  // Fundo branco com sombra sutil
+  doc.setFillColor(255, 255, 255)
+  doc.rect(0, 3, pageWidth, headerHeight - 3, 'F')
+  
+  // Linha divisória sutil
+  doc.setDrawColor(lightGray[0], lightGray[1], lightGray[2])
+  doc.setLineWidth(0.5)
+  doc.line(0, headerHeight, pageWidth, headerHeight)
+  
+  yPosition = 12
+
+  // Logo/Título da empresa (destacado mas elegante)
+  doc.setTextColor(primaryColor[0], primaryColor[1], primaryColor[2])
+  doc.setFontSize(22)
   doc.setFont('helvetica', 'bold')
-  doc.text('TraduzSum', margin, 25)
-
-  // Subtítulo
-  doc.setFontSize(10)
-  doc.setFont('helvetica', 'normal')
-  doc.text('Tradução Simplificada de Textos Jurídicos', margin, 32)
-
-  yPosition = 50
-
-  // Data e hora
+  
+  // Efeito de destaque sutil na logo (fundo levemente colorido)
+  doc.setFillColor(245, 247, 250) // gray-50
+  doc.roundedRect(margin - 3, yPosition - 8, 75, 12, 2, 2, 'F')
+  
+  doc.text('Traduz', margin, yPosition)
+  
+  // Parte "Sum" em cor diferente para destaque sutil
+  const traducWidth = doc.getTextWidth('Traduz')
+  doc.setTextColor(primaryLight[0], primaryLight[1], primaryLight[2])
+  doc.text('Sum', margin + traducWidth + 1, yPosition)
+  
+  // Subtítulo elegante
   doc.setTextColor(100, 100, 100)
-  doc.setFontSize(9)
-  doc.setFont('helvetica', 'italic')
+  doc.setFontSize(8)
+  doc.setFont('helvetica', 'normal')
+  doc.text('Tradução Simplificada de Textos Jurídicos', margin, yPosition + 6)
+
+  // Data e hora (lado direito, discreto)
   const now = new Date()
   const dateStr = now.toLocaleDateString('pt-BR', {
     day: '2-digit',
@@ -50,12 +72,16 @@ export function generatePDF({ title, translatedText, fileName = 'traducao', user
     hour: '2-digit',
     minute: '2-digit'
   })
-  doc.text(`Gerado em: ${dateStr}`, pageWidth - margin, yPosition, { align: 'right' })
-  yPosition += 15
+  doc.setTextColor(150, 150, 150)
+  doc.setFontSize(7)
+  doc.setFont('helvetica', 'normal')
+  doc.text(dateStr, pageWidth - margin, yPosition + 2, { align: 'right' })
 
-  // Título do documento
+  yPosition = headerHeight + 12
+
+  // Título do documento (compacto)
   doc.setTextColor(0, 0, 0)
-  doc.setFontSize(18)
+  doc.setFontSize(14)
   doc.setFont('helvetica', 'bold')
   const titleLines = doc.splitTextToSize(title, maxWidth)
   titleLines.forEach((line: string) => {
@@ -64,42 +90,130 @@ export function generatePDF({ title, translatedText, fileName = 'traducao', user
       yPosition = margin
     }
     doc.text(line, margin, yPosition)
-    yPosition += 7
+    yPosition += 6
   })
-  yPosition += 10
+  yPosition += 8
 
-  // Texto traduzido
+  // Texto traduzido com formatação inteligente
   if (yPosition > pageHeight - footerSpace) {
     doc.addPage()
     yPosition = margin
   }
 
-  doc.setFillColor(primaryColor[0], primaryColor[1], primaryColor[2])
-  doc.roundedRect(margin, yPosition - 5, maxWidth, 8, 2, 2, 'F')
-  
-  doc.setTextColor(255, 255, 255)
-  doc.setFontSize(12)
-  doc.setFont('helvetica', 'bold')
-  doc.text('Tradução Simplificada:', margin + 2, yPosition)
-  yPosition += 10
+  // Processar texto para identificar tópicos principais e aplicar formatação
+  const processText = (text: string): Array<{ text: string; isBold: boolean; isTitle: boolean }> => {
+    const lines = text.split('\n').filter(line => line.trim())
+    const processed: Array<{ text: string; isBold: boolean; isTitle: boolean }> = []
+    
+    for (const line of lines) {
+      const trimmed = line.trim()
+      
+      // Identificar tópicos principais (linhas que começam com ** ou são curtas e importantes)
+      const isBoldLine = trimmed.startsWith('**') && trimmed.endsWith('**') && trimmed.length < 100
+      const hasTitlePattern = trimmed.match(/^[A-ZÁÊÔÇ][^.!?]*[:\-]/) !== null
+      const isTitleLine = isBoldLine || (trimmed.length < 80 && (trimmed.endsWith(':') || hasTitlePattern))
+      
+      // Remover marcadores markdown se houver
+      let cleanText = trimmed.replace(/^\*\*|\*\*$/g, '').trim()
+      
+      // Identificar palavras-chave importantes para destacar
+      const importantKeywords = [
+        'DECISÃO', 'DECIDIU', 'JULGOU', 'CONDENOU', 'ABSOLVEU',
+        'REGRAS', 'REGRA', 'PRINCÍPIO', 'PRINCÍPIOS',
+        'EXCEÇÃO', 'EXCEÇÕES', 'EXCETO', 'SALVO',
+        'ATENÇÃO', 'IMPORTANTE', 'OBSERVAÇÃO',
+        'CONDIÇÃO', 'CONDIÇÕES', 'QUANDO', 'SE',
+        'REQUISITO', 'REQUISITOS', 'NECESSÁRIO'
+      ]
+      
+      const hasImportantKeyword = importantKeywords.some(keyword => 
+        cleanText.toUpperCase().includes(keyword)
+      )
+      
+      processed.push({
+        text: cleanText || trimmed,
+        isBold: isBoldLine || isTitleLine || hasImportantKeyword,
+        isTitle: isTitleLine
+      })
+    }
+    
+    return processed
+  }
+
+  const processedText = processText(translatedText)
+  const lineHeight = 4.5
+  const titleSpacing = 2
+  const paragraphSpacing = 3
 
   doc.setTextColor(0, 0, 0)
-  doc.setFontSize(11)
-  doc.setFont('helvetica', 'normal')
-  const translatedLines = doc.splitTextToSize(translatedText, maxWidth - 4)
-  translatedLines.forEach((line: string) => {
+  doc.setFontSize(9.5)
+  
+  for (const item of processedText) {
     if (yPosition > pageHeight - footerSpace) {
       doc.addPage()
       yPosition = margin
     }
-    doc.text(line, margin + 2, yPosition)
-    yPosition += 5
-  })
+    
+    // Aplicar formatação baseada no tipo de linha
+    if (item.isTitle) {
+      // Tópico principal - negrito e maior
+      doc.setFontSize(10.5)
+      doc.setFont('helvetica', 'bold')
+      doc.setTextColor(primaryColor[0], primaryColor[1], primaryColor[2])
+      
+      const titleLines = doc.splitTextToSize(item.text, maxWidth)
+      titleLines.forEach((line: string) => {
+        if (yPosition > pageHeight - footerSpace) {
+          doc.addPage()
+          yPosition = margin
+        }
+        doc.text(line, margin, yPosition)
+        yPosition += lineHeight
+      })
+      
+      yPosition += titleSpacing
+      doc.setFontSize(9.5)
+      doc.setTextColor(0, 0, 0)
+    } else if (item.isBold) {
+      // Texto importante em negrito
+      doc.setFont('helvetica', 'bold')
+      doc.setTextColor(0, 0, 0)
+      
+      const boldLines = doc.splitTextToSize(item.text, maxWidth)
+      boldLines.forEach((line: string) => {
+        if (yPosition > pageHeight - footerSpace) {
+          doc.addPage()
+          yPosition = margin
+        }
+        doc.text(line, margin, yPosition)
+        yPosition += lineHeight
+      })
+      
+      yPosition += paragraphSpacing
+      doc.setFont('helvetica', 'normal')
+    } else {
+      // Texto normal
+      doc.setFont('helvetica', 'normal')
+      doc.setTextColor(60, 60, 60)
+      
+      const normalLines = doc.splitTextToSize(item.text, maxWidth)
+      normalLines.forEach((line: string) => {
+        if (yPosition > pageHeight - footerSpace) {
+          doc.addPage()
+          yPosition = margin
+        }
+        doc.text(line, margin, yPosition)
+        yPosition += lineHeight
+      })
+      
+      yPosition += paragraphSpacing
+    }
+  }
 
-  // Rodapé em todas as páginas
+  // Rodapé em todas as páginas (compacto)
   const totalPages = doc.getNumberOfPages()
-  const footerTop = pageHeight - 45
-  const footerHeight = 45
+  const footerTop = pageHeight - 35
+  const footerHeight = 35
   
   for (let i = 1; i <= totalPages; i++) {
     doc.setPage(i)
@@ -112,62 +226,40 @@ export function generatePDF({ title, translatedText, fileName = 'traducao', user
     doc.setDrawColor(lightGray[0], lightGray[1], lightGray[2])
     doc.line(0, footerTop, pageWidth, footerTop)
     
-    // Lado esquerdo do rodapé
-    let leftY = footerTop + 10
+    // Lado esquerdo do rodapé (compacto)
+    let leftY = footerTop + 8
     
     // Logo/Título no rodapé
     doc.setTextColor(primaryColor[0], primaryColor[1], primaryColor[2])
-    doc.setFontSize(11)
-    doc.setFont('helvetica', 'bold')
-    doc.text('TraduzSum', margin, leftY)
-    leftY += 6
-    
-    // Informações do usuário (segurança anti-pirataria)
-    if (userName && userCPF) {
-      doc.setTextColor(0, 0, 0)
-      doc.setFontSize(7)
-      doc.setFont('helvetica', 'bold')
-      doc.text('Gerado por:', margin, leftY)
-      leftY += 4
-      doc.setFont('helvetica', 'normal')
-      const userInfo = `${userName} | CPF: ${userCPF}`
-      const userInfoLines = doc.splitTextToSize(userInfo, pageWidth / 2 - margin - 10)
-      userInfoLines.forEach((line: string) => {
-        doc.text(line, margin, leftY)
-        leftY += 3.5
-      })
-      leftY += 2
-    }
-    
-    // Informações de segurança
-    doc.setTextColor(100, 100, 100)
-    doc.setFontSize(6)
-    doc.setFont('helvetica', 'italic')
-    const securityText = 'Documento confidencial. Uso exclusivo do destinatário.'
-    doc.text(securityText, margin, leftY, { maxWidth: pageWidth / 2 - margin - 10 })
-    
-    // Lado direito do rodapé
-    let rightY = footerTop + 10
-    
-    // Site
-    doc.setTextColor(primaryColor[0], primaryColor[1], primaryColor[2])
     doc.setFontSize(9)
     doc.setFont('helvetica', 'bold')
-    doc.text('www.traduzsum.com.br', pageWidth - margin, rightY, { align: 'right' })
-    rightY += 6
+    doc.text('TraduzSum', margin, leftY)
+    leftY += 5
     
-    // Data
-    doc.setTextColor(100, 100, 100)
-    doc.setFontSize(7)
-    doc.setFont('helvetica', 'normal')
-    doc.text(`Gerado em ${dateStr}`, pageWidth - margin, rightY, { align: 'right' })
-    rightY += 5
+    // Informações do usuário (compacto)
+    if (userName && userCPF) {
+      doc.setTextColor(0, 0, 0)
+      doc.setFontSize(6)
+      doc.setFont('helvetica', 'normal')
+      const userInfo = `${userName} | CPF: ${userCPF.substring(0, 3)}.***.***-**`
+      doc.text(userInfo, margin, leftY, { maxWidth: pageWidth / 2 - margin - 5 })
+    }
+    
+    // Lado direito do rodapé (compacto)
+    let rightY = footerTop + 8
     
     // Número da página
     doc.setTextColor(100, 100, 100)
     doc.setFontSize(7)
     doc.setFont('helvetica', 'normal')
     doc.text(`Página ${i} de ${totalPages}`, pageWidth - margin, rightY, { align: 'right' })
+    rightY += 5
+    
+    // Site
+    doc.setTextColor(primaryColor[0], primaryColor[1], primaryColor[2])
+    doc.setFontSize(7)
+    doc.setFont('helvetica', 'bold')
+    doc.text('traduzsum.com.br', pageWidth - margin, rightY, { align: 'right' })
   }
 
   // Salvar PDF
