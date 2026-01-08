@@ -1,6 +1,7 @@
 import bcrypt from 'bcryptjs'
 import jwt from 'jsonwebtoken'
 import { prisma } from './db'
+import { safePrismaOperation } from './prisma-safe'
 
 const JWT_SECRET = process.env.JWT_SECRET || 'seu-secret-super-seguro-mude-em-producao'
 
@@ -43,8 +44,10 @@ export function generateResetToken(): string {
 
 export async function createUser(name: string, email: string, cpf: string, password: string): Promise<User> {
   // Verificar se email já existe
-  const existingEmail = await prisma.user.findUnique({
-    where: { email: email.toLowerCase() }
+  const existingEmail = await safePrismaOperation(async (client) => {
+    return await client.user.findUnique({
+      where: { email: email.toLowerCase() }
+    })
   })
   if (existingEmail) {
     throw new Error('Email já está em uso')
@@ -52,8 +55,10 @@ export async function createUser(name: string, email: string, cpf: string, passw
 
   // Verificar se CPF já existe
   const cleanCPF = cpf.replace(/[^\d]/g, '')
-  const existingCPF = await prisma.user.findUnique({
-    where: { cpf: cleanCPF }
+  const existingCPF = await safePrismaOperation(async (client) => {
+    return await client.user.findUnique({
+      where: { cpf: cleanCPF }
+    })
   })
   if (existingCPF) {
     throw new Error('CPF já está cadastrado')
@@ -61,14 +66,16 @@ export async function createUser(name: string, email: string, cpf: string, passw
 
   const hashedPassword = await hashPassword(password)
   
-  const user = await prisma.user.create({
-    data: {
-      name,
-      email: email.toLowerCase(),
-      cpf: cleanCPF,
-      password: hashedPassword,
-      plan: 'Gratuito',
-    }
+  const user = await safePrismaOperation(async (client) => {
+    return await client.user.create({
+      data: {
+        name,
+        email: email.toLowerCase(),
+        cpf: cleanCPF,
+        password: hashedPassword,
+        plan: 'Gratuito',
+      }
+    })
   })
 
   return {
@@ -84,8 +91,10 @@ export async function createUser(name: string, email: string, cpf: string, passw
 }
 
 export async function findUserByEmail(email: string): Promise<User | null> {
-  const user = await prisma.user.findUnique({
-    where: { email: email.toLowerCase() }
+  const user = await safePrismaOperation(async (client) => {
+    return await client.user.findUnique({
+      where: { email: email.toLowerCase() }
+    })
   })
 
   if (!user) return null
@@ -103,8 +112,10 @@ export async function findUserByEmail(email: string): Promise<User | null> {
 }
 
 export async function findUserById(id: string): Promise<User | null> {
-  const user = await prisma.user.findUnique({
-    where: { id }
+  const user = await safePrismaOperation(async (client) => {
+    return await client.user.findUnique({
+      where: { id }
+    })
   })
 
   if (!user) return null
@@ -122,8 +133,10 @@ export async function findUserById(id: string): Promise<User | null> {
 }
 
 export async function getAllUsers(): Promise<User[]> {
-  const users = await prisma.user.findMany({
-    orderBy: { createdAt: 'desc' }
+  const users = await safePrismaOperation(async (client) => {
+    return await client.user.findMany({
+      orderBy: { createdAt: 'desc' }
+    })
   })
 
   return users.map((user: { id: string; name: string; email: string; cpf: string; password: string; plan: string; credits: number | null; createdAt: Date }) => ({
@@ -147,37 +160,43 @@ export async function validateLogin(email: string, password: string): Promise<Us
 }
 
 export async function saveResetToken(email: string, token: string): Promise<void> {
-  // Remove tokens expirados
-  const now = new Date()
-  await prisma.resetToken.deleteMany({
-    where: {
-      expiresAt: {
-        lt: now
+  await safePrismaOperation(async (client) => {
+    // Remove tokens expirados
+    const now = new Date()
+    await client.resetToken.deleteMany({
+      where: {
+        expiresAt: {
+          lt: now
+        }
       }
-    }
-  })
-  
-  // Adiciona novo token (válido por 1 hora)
-  await prisma.resetToken.create({
-    data: {
-      token,
-      email: email.toLowerCase(),
-      expiresAt: new Date(now.getTime() + 60 * 60 * 1000) // 1 hora
-    }
+    })
+    
+    // Adiciona novo token (válido por 1 hora)
+    await client.resetToken.create({
+      data: {
+        token,
+        email: email.toLowerCase(),
+        expiresAt: new Date(now.getTime() + 60 * 60 * 1000) // 1 hora
+      }
+    })
   })
 }
 
 export async function validateResetToken(token: string): Promise<string | null> {
-  const resetToken = await prisma.resetToken.findUnique({
-    where: { token }
+  const resetToken = await safePrismaOperation(async (client) => {
+    return await client.resetToken.findUnique({
+      where: { token }
+    })
   })
 
   if (!resetToken) return null
 
   if (resetToken.expiresAt < new Date()) {
     // Remove token expirado
-    await prisma.resetToken.delete({
-      where: { token }
+    await safePrismaOperation(async (client) => {
+      await client.resetToken.delete({
+        where: { token }
+      })
     })
     return null
   }
@@ -186,8 +205,10 @@ export async function validateResetToken(token: string): Promise<string | null> 
 }
 
 export async function deleteResetToken(token: string): Promise<void> {
-  await prisma.resetToken.deleteMany({
-    where: { token }
+  await safePrismaOperation(async (client) => {
+    await client.resetToken.deleteMany({
+      where: { token }
+    })
   })
 }
 
@@ -196,26 +217,32 @@ export async function updateUserPassword(email: string, newPassword: string): Pr
   if (!user) throw new Error('Usuário não encontrado')
 
   const hashedPassword = await hashPassword(newPassword)
-  await prisma.user.update({
-    where: { email: email.toLowerCase() },
-    data: { password: hashedPassword }
+  await safePrismaOperation(async (client) => {
+    await client.user.update({
+      where: { email: email.toLowerCase() },
+      data: { password: hashedPassword }
+    })
   })
 }
 
 export async function updateUserPlan(userId: string, plan: 'Gratuito' | 'Mensal' | 'Anual' | 'Créditos', credits?: number): Promise<void> {
-  await prisma.user.update({
-    where: { id: userId },
-    data: {
-      plan,
-      credits: credits !== undefined ? credits : undefined
-    }
+  await safePrismaOperation(async (client) => {
+    await client.user.update({
+      where: { id: userId },
+      data: {
+        plan,
+        credits: credits !== undefined ? credits : undefined
+      }
+    })
   })
 }
 
 export async function getUserPlan(userId: string): Promise<'Gratuito' | 'Mensal' | 'Anual' | 'Créditos' | null> {
-  const user = await prisma.user.findUnique({
-    where: { id: userId },
-    select: { plan: true }
+  const user = await safePrismaOperation(async (client) => {
+    return await client.user.findUnique({
+      where: { id: userId },
+      select: { plan: true }
+    })
   })
   return user ? (user.plan as 'Gratuito' | 'Mensal' | 'Anual' | 'Créditos') : null
 }
