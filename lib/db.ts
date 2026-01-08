@@ -6,51 +6,28 @@ const globalForPrisma = globalThis as unknown as {
 
 // Função interna para criar Prisma Client (função privada)
 function _createPrismaClient(): PrismaClient {
-  const isBuildTime = process.env.NEXT_PHASE === 'phase-production-build' || 
-                      (process.env.NODE_ENV === 'production' && !process.env.VERCEL_ENV)
-
   const databaseUrl = process.env.DATABASE_URL || process.env.POSTGRES_URL || process.env.POSTGRES_DATABASE
 
   if (!databaseUrl) {
+    const availableDbVars = Object.keys(process.env).filter(k => 
+      k.includes('DATABASE') || k.includes('POSTGRES') || k.includes('DB')
+    ).join(', ') || 'nenhuma'
+    
+    console.error('❌ DATABASE_URL não encontrada!')
+    console.error('📋 Configure em:')
+    
     if (process.env.NODE_ENV === 'development') {
-      throw new Error(
-        'DATABASE_URL não encontrada. Verifique se a variável de ambiente está configurada no arquivo .env.local'
-      )
+      console.error('   Local: Adicione DATABASE_URL no arquivo .env.local')
     }
     
-    if (isBuildTime) {
-      console.warn('⚠️ DATABASE_URL não encontrada durante build. Usando URL dummy para prisma generate.')
-      return new PrismaClient({
-        datasources: {
-          db: {
-            url: 'postgresql://dummy:dummy@dummy:5432/dummy',
-          },
-        },
-      })
+    if (process.env.VERCEL) {
+      console.error('   Vercel: Settings → Environment Variables → DATABASE_URL')
+      console.error('   💡 Variáveis disponíveis:', availableDbVars)
     }
     
-    if (process.env.VERCEL && !isBuildTime) {
-      const availableDbVars = Object.keys(process.env).filter(k => 
-        k.includes('DATABASE') || k.includes('POSTGRES') || k.includes('DB')
-      ).join(', ') || 'nenhuma'
-      
-      console.error('❌ DATABASE_URL não encontrada no Vercel em runtime!')
-      console.error('📋 Configure em: Settings → Environment Variables → DATABASE_URL')
-      console.error('💡 Variáveis disponíveis:', availableDbVars)
-    }
-    
-    if (!isBuildTime && !process.env.VERCEL) {
-      throw new Error('DATABASE_URL é obrigatória em runtime')
-    }
-    
-    console.error('⚠️ Usando URL dummy em runtime (DATABASE_URL não configurada).')
-    return new PrismaClient({
-      datasources: {
-        db: {
-          url: 'postgresql://dummy:dummy@dummy:5432/dummy',
-        },
-      },
-    })
+    throw new Error(
+      'DATABASE_URL é obrigatória. Configure a variável de ambiente com a URL do banco de dados PostgreSQL.'
+    )
   }
 
   // Em serverless, adicionar identificador único à conexão para forçar nova sessão
