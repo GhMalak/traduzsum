@@ -9,7 +9,10 @@ function createPrismaClient(): PrismaClient {
   const isBuildTime = process.env.NEXT_PHASE === 'phase-production-build' || 
                       (process.env.NODE_ENV === 'production' && !process.env.VERCEL_ENV)
 
-  if (!process.env.DATABASE_URL) {
+  // Tentar encontrar DATABASE_URL ou variável alternativa
+  let databaseUrl = process.env.DATABASE_URL || process.env.POSTGRES_URL || process.env.POSTGRES_DATABASE
+
+  if (!databaseUrl) {
     if (process.env.NODE_ENV === 'development') {
       throw new Error(
         'DATABASE_URL não encontrada. Verifique se a variável de ambiente está configurada no arquivo .env.local'
@@ -29,12 +32,24 @@ function createPrismaClient(): PrismaClient {
     }
     
     // Em runtime no Vercel, SEMPRE exigir DATABASE_URL real
-    // Mas não quebrar a aplicação - deixar o erro ser capturado pelas rotas API
     if (process.env.VERCEL && !isBuildTime) {
+      const availableDbVars = Object.keys(process.env).filter(k => 
+        k.includes('DATABASE') || k.includes('POSTGRES') || k.includes('DB')
+      ).join(', ') || 'nenhuma'
+      
       console.error('❌ DATABASE_URL não encontrada no Vercel em runtime!')
       console.error('📋 Configure em: Settings → Environment Variables → DATABASE_URL')
-      console.error('💡 Variáveis disponíveis:', Object.keys(process.env).filter(k => k.includes('DATABASE') || k.includes('DB')).join(', ') || 'nenhuma')
-      // Não throw aqui - deixar as APIs capturarem o erro
+      console.error('💡 Variáveis disponíveis:', availableDbVars)
+      console.error('')
+      console.error('🔧 AÇÃO NECESSÁRIA:')
+      console.error('1. Acesse: https://vercel.com/seu-projeto/settings/environment-variables')
+      console.error('2. Adicione a variável: DATABASE_URL')
+      console.error('3. Valor: postgresql://postgres:G.henrique00222@db.klcbufexiyjlbavpojxc.supabase.co:5432/postgres')
+      console.error('4. Marque para "Production" ✅')
+      console.error('5. Faça redeploy')
+      console.error('')
+      
+      // Não throw aqui - deixar as APIs capturarem o erro com mensagem JSON válida
     }
     
     // Se não é build e não é Vercel, também exigir
@@ -58,7 +73,7 @@ function createPrismaClient(): PrismaClient {
   return new PrismaClient({
     datasources: {
       db: {
-        url: process.env.DATABASE_URL!,
+        url: databaseUrl!,
       },
     },
     log: process.env.NODE_ENV === 'development' ? ['query', 'error', 'warn'] : ['error'],
