@@ -385,7 +385,7 @@ ${text}
 - Comece diretamente com o conteúdo traduzido`,
         },
       ],
-      temperature: 0.2, // Reduzido para maior consistência e precisão
+      temperature: 0.0, // Reduzido para maior consistência e precisão
       max_tokens: 4096,
     })
 
