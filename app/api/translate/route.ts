@@ -3,87 +3,6 @@ import Groq from 'groq-sdk'
 
 export const dynamic = 'force-dynamic'
 
-// Função auxiliar para extrair palavras-chave específicas do texto jurídico
-function extrairPalavrasChaveEspecificas(text: string): string[] {
-  const textoLower = text.toLowerCase()
-  const palavrasChave: string[] = []
-  
-  // Termos jurídicos específicos importantes
-  const termosJuridicos = [
-    'súmula', 'sumula', 'stf', 'stj', 'tst', 'art.', 'artigo',
-    'inciso', 'parágrafo', 'lei', 'decreto', 'constituição', 'cf',
-    'nepotismo', 'improbidade', 'prescrição', 'decadência',
-    'coisa julgada', 'trânsito em julgado', 'mandado de segurança',
-    'habeas corpus', 'ação popular', 'ação civil pública',
-    'tutela antecipada', 'liminar', 'recurso', 'apelação',
-    'agravo', 'embargos', 'sentença', 'acórdão'
-  ]
-  
-  // Extrair termos jurídicos encontrados
-  for (const termo of termosJuridicos) {
-    if (textoLower.includes(termo.toLowerCase())) {
-      palavrasChave.push(termo)
-    }
-  }
-  
-  // Extrair números (artigos, súmulas, etc.)
-  const numeros = text.match(/\b(\d+)\b/g) || []
-  numeros.slice(0, 3).forEach(num => palavrasChave.push(num))
-  
-  // Extrair combinações importantes (ex: "Súmula 13", "art. 5º")
-  const combinacoes = [
-    /súmula\s+(\d+)/gi,
-    /sumula\s+(\d+)/gi,
-    /art\.\s*(\d+)/gi,
-    /artigo\s+(\d+)/gi,
-  ]
-  
-  combinacoes.forEach(regex => {
-    const matches = text.match(regex)
-    if (matches) {
-      palavrasChave.push(...matches.map(m => m.trim()))
-    }
-  })
-  
-  return Array.from(new Set(palavrasChave)).slice(0, 10)
-}
-
-// Função auxiliar para buscar questões relacionadas na web
-async function buscarQuestoesNaWeb(palavrasChave: string[]): Promise<string> {
-  try {
-    // Filtrar e priorizar palavras-chave mais específicas
-    const termosImportantes = palavrasChave
-      .filter(p => {
-        // Priorizar termos com mais significado
-        const pLower = p.toLowerCase()
-        return p.length > 2 && 
-               !['que', 'qual', 'para', 'com', 'dos', 'das'].includes(pLower)
-      })
-      .slice(0, 5)
-    
-    if (termosImportantes.length === 0) {
-      return ''
-    }
-    
-    // Criar termo de busca focado e específico
-    const termoBusca = termosImportantes.join(' ')
-    
-    // Criar query de busca específica para questões de concursos
-    // Formatado para instruir a IA sobre o que buscar
-    const query = `questões de concursos públicos "${termoBusca}"`
-    
-    console.log('🔍 Buscando questões relacionadas com termos específicos:', termoBusca)
-    console.log('📋 Query de busca:', query)
-    
-    // Retornar termos formatados para instruir a IA sobre o que buscar
-    // A IA usará esses termos para buscar questões específicas usando seu conhecimento
-    return termoBusca
-  } catch (error) {
-    console.error('Erro ao buscar questões na web:', error)
-    return ''
-  }
-}
-
 export async function POST(request: NextRequest) {
   try {
     const { text } = await request.json()
@@ -178,17 +97,6 @@ export async function POST(request: NextRequest) {
     
     console.log('✅ GROQ_API_KEY encontrada (primeiros 10 caracteres):', apiKey.substring(0, 10) + '...')
 
-    // Extrair palavras-chave específicas do texto para buscar questões relacionadas
-    console.log('🔍 Extraindo palavras-chave do texto...')
-    const palavrasChave = extrairPalavrasChaveEspecificas(text)
-    console.log('📝 Palavras-chave extraídas:', palavrasChave.join(', '))
-    
-    // Buscar questões relacionadas na web
-    const termosBusca = await buscarQuestoesNaWeb(palavrasChave)
-    const contextoBusca = termosBusca 
-      ? `\n\n**CONTEXTO DE BUSCA PARA QUESTÕES (CRÍTICO):**\n\nPalavras-chave específicas extraídas do texto: **${termosBusca}**\n\n**INSTRUÇÕES PARA BUSCA DE QUESTÕES:**\n1. Use EXATAMENTE estes termos: "${termosBusca}"\n2. Busque questões que mencionem esses termos específicos\n3. Priorize questões de sites como:\n   - QConcursos.com (busque questões que mencionem esses termos)\n   - Gran Cursos Online (questoes.grancursosonline.com.br)\n   - TEC Concursos (tecconcursos.com.br)\n   - Outras fontes públicas de questões de concursos\n4. As questões DEVEM mencionar os termos específicos extraídos acima\n5. Questões que não mencionem esses termos específicos devem ser REJEITADAS como genéricas\n\n`
-      : ''
-
     // Instancia o cliente Groq dentro da função para garantir que a variável seja lida
     const groq = new Groq({
       apiKey: apiKey,
@@ -223,7 +131,6 @@ Antes de traduzir, SEMPRE siga este processo mental estruturado:
 1. Identifique o TIPO de documento (súmula, jurisprudência, decisão, acórdão, etc.)
 2. Localize os ELEMENTOS ESSENCIAIS:
    - Fatos principais
-   - Questões jurídicas discutidas
    - Fundamentação legal
    - Decisão/julgamento
    - Condições e exceções
@@ -434,98 +341,13 @@ Você pode e DEVE usar seu conhecimento sobre:
 - Hierarquia das normas (Constituição > Leis > Decretos)
 - Estrutura do Poder Judiciário (STF, STJ, TRFs, TJs, etc.)
 - Conceitos jurídicos fundamentais
-- Questões de concursos públicos anteriores (banco de provas de concursos realizados)
 
 Use esse conhecimento para:
 - Explicar melhor conceitos que aparecem no texto
 - Contextualizar decisões quando necessário
 - Garantir que a tradução reflita corretamente o significado jurídico
-- Buscar questões relacionadas de concursos públicos anteriores quando solicitado
 
 MAS: NUNCA adicione informações que não estejam no texto original. Use o conhecimento apenas para MELHORAR a explicação, não para ADICIONAR conteúdo.
-
-# BUSCA DE QUESTÕES RELACIONADAS DE CONCURSOS PÚBLICOS
-
-Além da tradução, você DEVE buscar e apresentar questões relacionadas que já apareceram em concursos públicos anteriores.
-
-## REGRAS PARA BUSCA DE QUESTÕES:
-
-1. **RELEVÂNCIA ESTRITA E ESPECÍFICA (CRÍTICO):**
-   - As questões DEVEM ser EXATAMENTE relacionadas ao assunto ESPECÍFICO tratado no texto original
-   - **ANÁLISE PROFUNDA OBRIGATÓRIA:** Antes de buscar questões, identifique:
-     * O assunto PRINCIPAL específico (ex: "Súmula 13 do STF", não apenas "administração pública")
-     * Palavras-chave jurídicas específicas (ex: "nepotismo em cargos de confiança", "proibição de parentesco")
-     * Dispositivos legais mencionados (artigos, súmulas, leis específicas)
-     * Conceitos jurídicos específicos tratados
-   
-   - **NÃO traga questões genéricas ou tangencialmente relacionadas**
-   - **REGRAS DE FILTRO:**
-     * Se o texto fala sobre "Súmula 13 do STF sobre nepotismo": trazer questões ESPECÍFICAS sobre Súmula 13, nepotismo em cargos de confiança, proibição de nomeação de parentes
-     * Se o texto fala sobre "artigo 5º, inciso X da CF sobre danos morais": trazer questões sobre danos morais conforme artigo 5º, inciso X, não apenas sobre danos morais em geral
-     * Se o texto fala sobre "prescrição contra incapaz": trazer questões sobre prescrição específica de incapazes, não sobre prescrição em geral
-   
-   - O tema principal da questão deve testar CONHECIMENTO DIRETO sobre o assunto específico tratado
-   - Questões que mencionam apenas o tema de forma genérica devem ser REJEITADAS
-
-2. **QUANTIDADE MÍNIMA:**
-   - SEMPRE trazer pelo menos 5 questões relacionadas
-   - Se houver mais questões relevantes, pode trazer até 10 questões
-
-3. **FORMATO DAS QUESTÕES:**
-   - As questões podem ser de DOIS TIPOS:
-     a) **Múltipla Escolha:** com alternativas A, B, C, D, E (ou menos alternativas conforme a questão real)
-     b) **Certo ou Errado (C/E):** questões de julgamento onde cada item é avaliado como Certo ou Errado
-   
-   - Cada questão deve incluir:
-     * **Enunciado completo e preciso** (texto exato ou muito próximo de questões reais)
-     * **Alternativas completas:**
-       - Para múltipla escolha: A, B, C, D, E (ou o número de alternativas que a questão tiver) - texto completo de cada uma
-       - Para C/E: cada item do enunciado deve ser marcado separadamente como (C) Certo ou (E) Errado
-     * **Fonte/Órgão/Concurso** (se possível: Ex: "TJSP - 2020", "TRF4 - 2019", "TRE-RJ", "MP-SP")
-     * **Banca** (se conhecida: FGV, CESPE, VUNESP, FCC, IBFC, etc.)
-     * **Ano aproximado** (se possível identificar)
-   
-   - **IMPORTANTE:** NÃO coloque o gabarito junto com cada questão. Os gabaritos devem aparecer APENAS no final, em uma seção separada chamada "GABARITO".
-
-4. **FONTE E AUTENTICIDADE (CRÍTICO):**
-   - **PRIORIDADE MÁXIMA:** Use questões REAIS que você conhece de bancos públicos como:
-     * QConcursos.com
-     * Gran Cursos Online
-     * TEC Concursos
-     * Questões de Concursos
-     * Outras fontes públicas de questões de concursos
-   - Use seu conhecimento sobre bancos de provas de concursos (FGV, CESPE, VUNESP, FCC, IBFC, etc.)
-   - Priorize questões de concursos importantes (TJ, TRT, TRE, MP, DP, PF, PRF, Tribunais Regionais, etc.)
-   - **NÃO invente questões completamente fictícias** - baseie-se em questões reais ou típicas que você conhece
-   - Se não souber o ano ou órgão exato, indique "Concurso público" ou "Questão típica de [banca]"
-   - Questões devem ser realistas e típicas de concursos públicos brasileiros
-
-5. **PRECISÃO DO CONTEÚDO (ESPECIFICIDADE MÁXIMA):**
-   - As questões devem testar conhecimentos ESPECÍFICOS sobre o MESMO assunto tratado
-   - **PROCESSO DE BUSCA ESPECÍFICA:**
-     1. Identifique o assunto específico do texto (ex: "Súmula 13 do STF sobre nepotismo em cargos de confiança")
-     2. Extraia palavras-chave ESPECÍFICAS: "Súmula 13 STF", "nepotismo cargos confiança", "proibição nomeação parentes"
-     3. Busque questões que mencionem EXATAMENTE essas palavras-chave ou conceitos específicos
-     4. Rejeite questões que tratem apenas do tema genérico sem mencionar o aspecto específico
-   
-   - **EXEMPLOS DE ESPECIFICIDADE:**
-     * ✅ CORRETO: Se o texto fala sobre "Súmula 13 do STF sobre nepotismo":
-       - Questões sobre Súmula 13 do STF especificamente
-       - Questões sobre nepotismo em cargos de confiança e funções gratificadas
-       - Questões sobre proibição de nomeação de cônjuge, parente em linha reta, colateral ou por afinidade até 3º grau
-     
-     * ❌ INCORRETO (GENÉRICO):
-       - Questões sobre administração pública em geral
-       - Questões sobre princípios administrativos sem mencionar nepotismo
-       - Questões sobre ética administrativa genérica
-       - Questões sobre outros tipos de improbidade não relacionados
-   
-   - **CRITÉRIO DE VALIDAÇÃO:** Cada questão deve fazer referência direta ao aspecto específico tratado no texto original
-
-6. **DIVERSIDADE:**
-   - Varie os aspectos do assunto tratado nas questões
-   - Inclua questões que abordem diferentes ângulos do mesmo tema
-   - Mantenha sempre a relevância direta ao assunto buscado
 
 # FINALIZAÇÃO
 
@@ -568,7 +390,7 @@ ${text}
 
 ---
 
-${contextoBusca}**INSTRUÇÕES PARA A TRADUÇÃO:**
+**INSTRUÇÕES PARA A TRADUÇÃO:**
 - Crie um RESUMO FACILITADOR, não uma tradução palavra por palavra
 - Organize em TÓPICOS PRINCIPAIS com explicações claras
 - Use formatação com **NEGRITO** para tópicos principais (ex: **DECISÃO:**, **REGRAS:**, **EXCEÇÕES:**)
@@ -576,119 +398,14 @@ ${contextoBusca}**INSTRUÇÕES PARA A TRADUÇÃO:**
 - Destaque claramente TODAS as exceções e condições
 - Use linguagem acessível mas precisa
 
-**BUSCA DE QUESTÕES RELACIONADAS DE CONCURSOS (OBRIGATÓRIO):**
-Após a tradução, você DEVE buscar e apresentar pelo menos 5 questões relacionadas que já apareceram em concursos públicos anteriores.
+**FORMATO DA RESPOSTA:**
 
-**PROCESSO OBRIGATÓRIO ANTES DE BUSCAR QUESTÕES:**
-1. **ANÁLISE DO TEXTO:** Identifique o assunto ESPECÍFICO tratado:
-   - Qual dispositivo legal específico? (artigo, súmula, lei, inciso, parágrafo)
-   - Qual conceito jurídico específico?
-   - Quais palavras-chave ESPECÍFICAS aparecem no texto?
-   - Qual aspecto particular do tema é tratado?
-
-2. **EXTRAÇÃO DE PALAVRAS-CHAVE:** Liste palavras-chave ESPECÍFICAS para busca:
-   - Exemplo: Se o texto fala sobre "Súmula 13 STF nepotismo cargos confiança"
-   - Exemplo: Se o texto fala sobre "art. 37 CF impessoalidade moralidade"
-   - Use termos técnicos específicos do texto original
-
-3. **BUSCA DIRECIONADA:** Busque questões que mencionem esses termos ESPECÍFICOS
-
-**REQUISITOS DAS QUESTÕES:**
-1. **ESPECIFICIDADE ABSOLUTA:** As questões DEVEM ser EXATAMENTE relacionadas ao assunto ESPECÍFICO tratado no texto original
-   - Não aceite questões genéricas sobre o tema amplo
-   - A questão deve mencionar o aspecto específico tratado
-   - Se o texto fala sobre "Súmula 13 STF", a questão deve mencionar "Súmula 13" ou tratar especificamente do nepotismo em cargos de confiança
-   
-2. Mínimo de 5 questões ESPECÍFICAS, podendo chegar até 10 se houver mais questões relevantes
-   - QUALIDADE > QUANTIDADE: 5 questões muito específicas são melhores que 10 genéricas
-   
-3. As questões podem ser de múltipla escolha (A, B, C, D, E) ou Certo/Errado (C/E). Cada questão deve incluir:
-   - **Enunciado completo e preciso** da questão (texto exato ou muito próximo do original)
-   - **Alternativas ou itens:**
-     * Para múltipla escolha: Todas as alternativas (A, B, C, D, E ou o número que tiver) - texto completo de cada alternativa
-     * Para C/E: Cada item do enunciado separadamente, indicando se é (C) Certo ou (E) Errado
-   - **Fonte/Órgão/Concurso:** Se possível identificar: Ex: "TJSP - 2020", "TRF4 - 2019", "TRE-RJ", "MP-SP", "FGV", "CESPE", etc.
-   - **Ano:** Se possível identificar o ano aproximado
-   
-   - **IMPORTANTE:** NÃO coloque o gabarito junto com cada questão. Os gabaritos devem aparecer APENAS no final, em uma seção separada.
-4. Busque questões REAIS de bancas conhecidas (FGV, CESPE/Cebraspe, VUNESP, FCC, IBFC, etc.)
-5. O tema da questão deve estar DIRETAMENTE relacionado ao assunto buscado
-6. Priorize questões de concursos importantes (TJ, TRT, TRE, MP, DP, PF, PRF, Tribunais Regionais, etc.)
-
-**FORMATO DA RESPOSTA (ESTRUTURA OBRIGATÓRIA):**
-
-Inicie diretamente com a tradução formatada, seguida de uma seção de questões relacionadas.
-
-Após a tradução, adicione uma quebra de linha dupla e então:
-
----
-
-**QUESTÕES RELACIONADAS DE CONCURSOS PÚBLICOS**
-
-[Questão 1 - Múltipla Escolha]
-**Enunciado:** [Texto completo da questão]
-
-A) [Alternativa A]
-B) [Alternativa B]
-C) [Alternativa C]
-D) [Alternativa D]
-E) [Alternativa E]
-
-**Fonte:** [Órgão/Concurso e ano, se conhecido]
-
-[Questão 2 - Certo ou Errado]
-**Enunciado:** [Texto completo da questão]
-
-I. [Primeiro item do enunciado]
-II. [Segundo item do enunciado]
-III. [Terceiro item do enunciado]
-
-**Fonte:** [Órgão/Concurso e ano, se conhecido]
-
-[Questão 3]
-... (repita o formato para todas as questões - pode ser múltipla escolha ou C/E conforme o tipo da questão real - SEM GABARITO junto)
-
----
-
-**GABARITO**
-
-Questão 1: [Letra correta: A, B, C, D ou E]
-
-Questão 2: [Respostas: C, E, C (ou item por item: I-C, II-E, III-C)]
-
-Questão 3: [Resposta correta]
-
-... (continue para todas as questões)
-
----
-
-**IMPORTANTE SOBRE O GABARITO:**
-- **NÃO coloque o gabarito junto com cada questão**
-- As questões devem aparecer SEM o gabarito visível
-- No final de todas as questões, adicione uma seção separada chamada "GABARITO"
-- Na seção de gabarito, liste todas as respostas corretas numeradas (Questão 1, Questão 2, etc.)
-- Para múltipla escolha: indique a letra correta (ex: "Questão 1: A")
-- Para C/E: indique as respostas (ex: "Questão 2: C, E, C" ou "Questão 2: I-C, II-E, III-C")
-
-**VALIDAÇÃO FINAL DAS QUESTÕES:**
-Antes de finalizar, valide CADA questão:
-- ✓ A questão menciona o assunto ESPECÍFICO tratado no texto?
-- ✓ A questão testa conhecimento DIRETO sobre o aspecto específico?
-- ✓ A questão não é apenas genérica sobre o tema amplo?
-- ✓ Se remover palavras genéricas, sobra conteúdo específico relacionado ao texto?
-
-**REJEITE QUESTÕES GENÉRICAS:**
-- Questões que falam apenas sobre o tema geral sem mencionar o aspecto específico
-- Questões que testam conhecimento tangencial, não direto
-- Questões que não fazem referência aos termos específicos do texto
-
-**IMPORTANTE:**
-- Responda APENAS com o conteúdo (tradução + questões específicas sem gabarito + seção de gabarito no final), sem introduções ou comentários meta
+- Responda APENAS com o conteúdo traduzido formatado, sem introduções ou comentários meta
 - Comece diretamente com a tradução formatada
-- Após a tradução, adicione as questões relacionadas SEM gabarito
-- No final, adicione a seção "GABARITO" com todas as respostas
-- Garanta que TODAS as questões sejam EXATAMENTE e ESPECIFICAMENTE relacionadas ao assunto tratado
-- Se não conseguir encontrar questões específicas sobre o tema exato, indique isso claramente e explique por que as questões encontradas não são suficientemente específicas`,
+- Use formatação com **NEGRITO** para tópicos principais
+- Seja conciso mas completo - foque nos pontos essenciais
+- Destaque claramente TODAS as exceções e condições
+- Use linguagem acessível mas precisa`,
         },
       ],
       temperature: 0.0, // Reduzido para maior consistência e precisão
