@@ -204,24 +204,30 @@ export function generatePDF({ title, translatedText, fileName = 'traducao', user
       // RESETAR a cor para preto após títulos, para garantir que o próximo texto não fique azul
       doc.setTextColor(0, 0, 0)
     } else {
-      // Resto do texto - NEGRITO (PRETO) - não azul
+      // Resto do texto - SEMPRE em NEGRITO PRETO (não azul)
       doc.setFont('helvetica', 'bold')
-      // GARANTIR que a cor seja PRETO (0, 0, 0) e não azul
+      // FORÇAR cor PRETA (RGB: 0, 0, 0) antes de cada renderização
       doc.setTextColor(0, 0, 0)
+      doc.setFontSize(9.5) // Garantir tamanho padrão
       
       const boldLines = doc.splitTextToSize(item.text, maxWidth)
       boldLines.forEach((line: string) => {
         if (yPosition > pageHeight - footerSpace) {
           doc.addPage()
           yPosition = margin
+          // Ao criar nova página, garantir cor preta
+          doc.setTextColor(0, 0, 0)
         }
-        // Garantir que a cor continue sendo preta
+        // FORÇAR cor PRETA em cada linha para garantir que não herde azul dos títulos
         doc.setTextColor(0, 0, 0)
+        doc.setFont('helvetica', 'bold')
         doc.text(line, margin, yPosition)
         yPosition += lineHeight + 0.5
       })
       
       yPosition += paragraphSpacing
+      // Manter cor preta após o texto
+      doc.setTextColor(0, 0, 0)
     }
   }
 
