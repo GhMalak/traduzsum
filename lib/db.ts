@@ -30,18 +30,22 @@ function _createPrismaClient(): PrismaClient {
     )
   }
 
-  // Em serverless, adicionar identificador único à conexão para forçar nova sessão
-  // Isso evita prepared statements compartilhados entre requisições
+  // Em serverless, desabilitar prepared statements para evitar conflitos
+  // Isso é necessário porque prepared statements são compartilhados entre conexões no PostgreSQL
   const isServerless = process.env.VERCEL || process.env.AWS_LAMBDA_FUNCTION_NAME
   let finalDatabaseUrl = databaseUrl
   
   // Adicionar parâmetros de conexão
   const separator = finalDatabaseUrl.includes('?') ? '&' : '?'
   
-  // Em serverless, adicionar ID único para forçar nova conexão
+  // Em serverless, adicionar parâmetros para compatibilidade com poolers (Supabase)
+  // pgbouncer=true desabilita prepared statements no Prisma, evitando erro "prepared statement already exists"
+  // Isso é necessário porque poolers de conexão em modo transação não suportam prepared statements compartilhados
   if (isServerless) {
     const uniqueId = `${Date.now()}-${Math.random().toString(36).substring(7)}`
-    finalDatabaseUrl += `${separator}application_name=req-${uniqueId}&connection_limit=1&pool_timeout=5`
+    // CRÍTICO: pgbouncer=true desabilita prepared statements no Prisma (recomendado pela Supabase)
+    // Isso resolve o erro "prepared statement already exists" com poolers como Supabase/PgBouncer
+    finalDatabaseUrl += `${separator}application_name=req-${uniqueId}&connection_limit=1&pool_timeout=5&pgbouncer=true`
   } else {
     finalDatabaseUrl += `${separator}connection_limit=5&pool_timeout=10`
   }
