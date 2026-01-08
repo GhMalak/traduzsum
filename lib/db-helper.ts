@@ -4,13 +4,38 @@ import { prisma } from './db'
  * Helper para executar operações Prisma com retry automático
  * quando detecta erro de prepared statement (42P05)
  * 
- * NOTA: Se o erro persistir mesmo com retry, pode ser necessário
- * desabilitar prepared statements na URL: ?statement_cache_size=0
+ * Em ambientes serverless, força desconexão e reconexão ANTES de cada operação
+ * para evitar conflitos de prepared statements compartilhados entre requisições
  */
 export async function withRetry<T>(
   operation: () => Promise<T>,
-  maxRetries = 1 // Reduzido para 1 porque vamos confiar no statement_cache_size=0
+  maxRetries = 2
 ): Promise<T> {
+  const isServerless = process.env.VERCEL || process.env.AWS_LAMBDA_FUNCTION_NAME
+  
+  // Em serverless, forçar desconexão e reconexão ANTES de cada operação
+  // Isso garante que cada requisição tenha uma conexão limpa sem prepared statements antigos
+  if (isServerless) {
+    try {
+      // Tentar desconectar se já estiver conectado (pode falhar se não estiver conectado - ok)
+      try {
+        await prisma.$disconnect()
+      } catch {
+        // Ignorar erro se não estiver conectado
+      }
+      
+      // Aguardar um pouco para garantir que a conexão foi fechada completamente
+      await new Promise(resolve => setTimeout(resolve, 50))
+      
+      // Conectar novamente para ter uma conexão limpa
+      await prisma.$connect()
+    } catch (reconnectError: any) {
+      // Se falhar, continuar mesmo assim - pode já estar conectado
+      // Isso é esperado e não é um erro crítico
+      console.warn('⚠️ Aviso ao reconectar (ignorando):', reconnectError?.message || 'Erro desconhecido')
+    }
+  }
+  
   let lastError: any
   
   for (let attempt = 0; attempt <= maxRetries; attempt++) {
@@ -29,15 +54,15 @@ export async function withRetry<T>(
         console.warn(`⚠️ Erro de prepared statement detectado (tentativa ${attempt + 1}/${maxRetries + 1}), reconectando...`)
         
         try {
-          // Desconectar completamente e aguardar
+          // Desconectar completamente
           await prisma.$disconnect()
-          // Aguardar mais tempo para garantir que a conexão foi completamente fechada
+          // Aguardar para garantir que a conexão foi completamente fechada
           await new Promise(resolve => setTimeout(resolve, 200 * (attempt + 1)))
           
           // Reconectar
           await prisma.$connect()
           
-          // Aguardar um pouco mais após reconectar
+          // Aguardar um pouco após reconectar
           await new Promise(resolve => setTimeout(resolve, 100))
         } catch (reconnectError: any) {
           console.error('❌ Erro ao reconectar:', reconnectError?.message || reconnectError)
@@ -56,4 +81,3 @@ export async function withRetry<T>(
   // Se chegou aqui, esgotou todas as tentativas
   throw lastError
 }
-

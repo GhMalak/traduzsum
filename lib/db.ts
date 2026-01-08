@@ -74,7 +74,7 @@ function createPrismaClient(): PrismaClient {
   // Isso é necessário em ambientes serverless como Vercel
   let finalDatabaseUrl = databaseUrl!
   
-  // Em ambientes serverless (Vercel), limitar conexões e desabilitar cache de prepared statements
+  // Em ambientes serverless (Vercel), limitar conexões para evitar conflitos
   const isServerless = process.env.VERCEL || process.env.AWS_LAMBDA_FUNCTION_NAME
   
   // Adicionar parâmetros de conexão para evitar problemas com prepared statements
@@ -85,10 +85,6 @@ function createPrismaClient(): PrismaClient {
     // Não tem parâmetros, construir do zero
     params.push(`connection_limit=${isServerless ? '1' : '5'}`)
     params.push(`pool_timeout=${isServerless ? '5' : '10'}`)
-    // CRÍTICO: Desabilitar cache de prepared statements para evitar conflitos em serverless
-    if (isServerless) {
-      params.push('statement_cache_size=0')
-    }
     finalDatabaseUrl += '?' + params.join('&')
   } else {
     // Já tem parâmetros, adicionar apenas os que não existem
@@ -97,10 +93,6 @@ function createPrismaClient(): PrismaClient {
     }
     if (!finalDatabaseUrl.includes('pool_timeout=')) {
       params.push(`pool_timeout=${isServerless ? '5' : '10'}`)
-    }
-    // CRÍTICO: Desabilitar cache de prepared statements em serverless
-    if (isServerless && !finalDatabaseUrl.includes('statement_cache_size=')) {
-      params.push('statement_cache_size=0')
     }
     if (params.length > 0) {
       finalDatabaseUrl += '&' + params.join('&')
@@ -115,19 +107,6 @@ function createPrismaClient(): PrismaClient {
     },
     log: process.env.NODE_ENV === 'development' ? ['query', 'error', 'warn'] : ['error'],
   })
-  
-  // Em serverless, desconectar após cada operação para evitar conflitos
-  if (isServerless) {
-    // Interceptar $disconnect para garantir que sempre desconecta
-    const originalDisconnect = client.$disconnect.bind(client)
-    client.$disconnect = async () => {
-      try {
-        await originalDisconnect()
-      } catch (error) {
-        // Ignorar erros ao desconectar
-      }
-    }
-  }
   
   return client
 }
