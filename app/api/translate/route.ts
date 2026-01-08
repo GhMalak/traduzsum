@@ -370,17 +370,20 @@ Siga rigorosamente TODAS as instruções do sistema. Use o processo estruturado 
 
 **FORMATAÇÃO PARA PDF (IMPORTANTE):**
 - Organize o texto em TÓPICOS PRINCIPAIS claros
-- Use estrutura hierárquica: TÓPICOS PRINCIPAIS em negrito, subtópicos e explicações em texto normal
+- Use estrutura hierárquica:
+  * **TÓPICOS PRINCIPAIS** (títulos): formate com **NEGRITO** e termine com dois pontos (:)
+  * **RESTO DO TEXTO**: formate também com **NEGRITO** para facilitar a leitura
 - Seja CONCISO: crie um resumo facilitador, não uma transcrição completa
 - Destaque os pontos mais importantes de forma clara
 - Use quebras de linha para separar tópicos
 - Formate assim:
-  **TÓPICO PRINCIPAL:** Explicação clara e acessível do tópico.
+  **TÓPICO PRINCIPAL:** Texto explicativo em negrito que explica o tópico.
   
-  **OUTRO TÓPICO:** Outra explicação importante.
+  **OUTRO TÓPICO:** Outro texto explicativo em negrito.
   
 - Se houver exceções ou condições, destaque-as claramente: **ATENÇÃO:** ou **EXCEÇÃO:**
 - Mantenha o texto compacto mas completo
+- **IMPORTANTE:** TODOS os tópicos devem terminar com dois pontos (:) e o texto explicativo deve vir logo após, também em negrito
 
 **TEXTO ORIGINAL:**
 
@@ -393,7 +396,15 @@ ${text}
 **INSTRUÇÕES PARA A TRADUÇÃO:**
 - Crie um RESUMO FACILITADOR, não uma tradução palavra por palavra
 - Organize em TÓPICOS PRINCIPAIS com explicações claras
-- Use formatação com **NEGRITO** para tópicos principais (ex: **DECISÃO:**, **REGRAS:**, **EXCEÇÕES:**)
+- Use formatação com **NEGRITO** para TUDO:
+  * Títulos/tópicos principais: **TÍTULO:** (terminando com dois pontos)
+  * Texto explicativo: também em **NEGRITO** para facilitar leitura
+- Exemplo de formatação:
+  **DECISÃO:** O juiz decidiu que o réu deve pagar indenização.
+  
+  **REGRAS:** São aplicadas as seguintes regras.
+  
+  **EXCEÇÕES:** Atenção para as exceções.
 - Seja conciso mas completo - foque nos pontos essenciais
 - Destaque claramente TODAS as exceções e condições
 - Use linguagem acessível mas precisa
@@ -402,7 +413,9 @@ ${text}
 
 - Responda APENAS com o conteúdo traduzido formatado, sem introduções ou comentários meta
 - Comece diretamente com a tradução formatada
-- Use formatação com **NEGRITO** para tópicos principais
+- Use formatação com **NEGRITO** para TUDO:
+  * Títulos/tópicos principais: **TÍTULO:** (em negrito, terminando com dois pontos)
+  * Todo o texto explicativo: também em **NEGRITO** para facilitar leitura
 - Seja conciso mas completo - foque nos pontos essenciais
 - Destaque claramente TODAS as exceções e condições
 - Use linguagem acessível mas precisa`,

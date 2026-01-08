@@ -110,31 +110,24 @@ export function generatePDF({ title, translatedText, fileName = 'traducao', user
     for (const line of lines) {
       const trimmed = line.trim()
       
-      // Identificar tópicos principais (linhas que começam com ** ou são curtas e importantes)
-      const isBoldLine = trimmed.startsWith('**') && trimmed.endsWith('**') && trimmed.length < 100
-      const hasTitlePattern = trimmed.match(/^[A-ZÁÊÔÇ][^.!?]*[:\-]/) !== null
-      const isTitleLine = isBoldLine || (trimmed.length < 80 && (trimmed.endsWith(':') || hasTitlePattern))
+      // Identificar títulos/tópicos principais (linhas em negrito que terminam com :)
+      const isBoldLine = trimmed.startsWith('**') && trimmed.endsWith('**')
+      const hasTitlePattern = trimmed.match(/^\*\*[A-ZÁÊÔÇ][^.!?]*:\*\*$/) !== null || 
+                              (trimmed.startsWith('**') && trimmed.includes(':') && trimmed.endsWith('**'))
+      
+      // Identificar se é um título (termina com : dentro do negrito)
+      const isTitleLine = hasTitlePattern || (isBoldLine && trimmed.includes(':'))
       
       // Remover marcadores markdown se houver
       let cleanText = trimmed.replace(/^\*\*|\*\*$/g, '').trim()
       
-      // Identificar palavras-chave importantes para destacar
-      const importantKeywords = [
-        'DECISÃO', 'DECIDIU', 'JULGOU', 'CONDENOU', 'ABSOLVEU',
-        'REGRAS', 'REGRA', 'PRINCÍPIO', 'PRINCÍPIOS',
-        'EXCEÇÃO', 'EXCEÇÕES', 'EXCETO', 'SALVO',
-        'ATENÇÃO', 'IMPORTANTE', 'OBSERVAÇÃO',
-        'CONDIÇÃO', 'CONDIÇÕES', 'QUANDO', 'SE',
-        'REQUISITO', 'REQUISITOS', 'NECESSÁRIO'
-      ]
-      
-      const hasImportantKeyword = importantKeywords.some(keyword => 
-        cleanText.toUpperCase().includes(keyword)
-      )
+      // Se o texto não estiver em negrito no markdown, mas deveria estar (segundo as instruções)
+      // Considerar tudo em negrito exceto títulos que serão azuis
+      const shouldBeBold = !trimmed.startsWith('**') || trimmed.startsWith('**')
       
       processed.push({
         text: cleanText || trimmed,
-        isBold: isBoldLine || isTitleLine || hasImportantKeyword,
+        isBold: shouldBeBold, // Tudo em negrito por padrão
         isTitle: isTitleLine
       })
     }
@@ -158,10 +151,11 @@ export function generatePDF({ title, translatedText, fileName = 'traducao', user
     
     // Aplicar formatação baseada no tipo de linha
     if (item.isTitle) {
-      // Tópico principal - negrito e maior
+      // Tópico principal/título - AZUL e negrito
       doc.setFontSize(10.5)
       doc.setFont('helvetica', 'bold')
-      doc.setTextColor(primaryColor[0], primaryColor[1], primaryColor[2])
+      // Usar azul para títulos (accentColor que já está definido como blue-500)
+      doc.setTextColor(accentColor[0], accentColor[1], accentColor[2])
       
       const titleLines = doc.splitTextToSize(item.text, maxWidth)
       titleLines.forEach((line: string) => {
@@ -175,31 +169,13 @@ export function generatePDF({ title, translatedText, fileName = 'traducao', user
       
       yPosition += titleSpacing
       doc.setFontSize(9.5)
-      doc.setTextColor(0, 0, 0)
-    } else if (item.isBold) {
-      // Texto importante em negrito
+    } else {
+      // Resto do texto - NEGRITO (preto)
       doc.setFont('helvetica', 'bold')
       doc.setTextColor(0, 0, 0)
       
       const boldLines = doc.splitTextToSize(item.text, maxWidth)
       boldLines.forEach((line: string) => {
-        if (yPosition > pageHeight - footerSpace) {
-          doc.addPage()
-          yPosition = margin
-        }
-        doc.text(line, margin, yPosition)
-        yPosition += lineHeight
-      })
-      
-      yPosition += paragraphSpacing
-      doc.setFont('helvetica', 'normal')
-    } else {
-      // Texto normal
-      doc.setFont('helvetica', 'normal')
-      doc.setTextColor(60, 60, 60)
-      
-      const normalLines = doc.splitTextToSize(item.text, maxWidth)
-      normalLines.forEach((line: string) => {
         if (yPosition > pageHeight - footerSpace) {
           doc.addPage()
           yPosition = margin
@@ -243,7 +219,8 @@ export function generatePDF({ title, translatedText, fileName = 'traducao', user
       doc.setTextColor(0, 0, 0)
       doc.setFontSize(6)
       doc.setFont('helvetica', 'normal')
-      const userInfo = `${userName} | CPF: ${userCPF.substring(0, 3)}.***.***-**`
+      // Mostrar CPF completo para identificação e rastreabilidade
+      const userInfo = `${userName} | CPF: ${userCPF}`
       doc.text(userInfo, margin, leftY, { maxWidth: pageWidth / 2 - margin - 5 })
     }
     
