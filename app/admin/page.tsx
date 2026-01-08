@@ -44,10 +44,24 @@ export default function AdminPage() {
   const checkAdmin = async () => {
     try {
       const response = await fetch('/api/admin/check')
-      const data = await response.json()
-      setIsAdmin(data.isAdmin || false)
-      
-      if (!data.isAdmin) {
+      const contentType = response.headers.get('content-type')
+      if (contentType && contentType.includes('application/json')) {
+        const text = await response.text()
+        if (text.trim()) {
+          try {
+            const data = JSON.parse(text)
+            setIsAdmin(data.isAdmin || false)
+            if (!data.isAdmin) {
+              router.push('/')
+            }
+          } catch (parseError) {
+            console.error('Erro ao parsear JSON:', parseError)
+            router.push('/')
+          }
+        } else {
+          router.push('/')
+        }
+      } else {
         router.push('/')
       }
     } catch (error) {
@@ -61,18 +75,28 @@ export default function AdminPage() {
       setLoading(true)
       const response = await fetch('/api/admin/users')
       if (response.ok) {
-        const data = await response.json()
-        setUsers(data.users || [])
-        
-        // Calcular estatísticas
-        const stats = {
-          total: data.users?.length || 0,
-          gratuito: data.users?.filter((u: User) => u.plan === 'Gratuito').length || 0,
-          mensal: data.users?.filter((u: User) => u.plan === 'Mensal').length || 0,
-          anual: data.users?.filter((u: User) => u.plan === 'Anual').length || 0,
-          creditos: data.users?.filter((u: User) => u.plan === 'Créditos').length || 0
+        const contentType = response.headers.get('content-type')
+        if (contentType && contentType.includes('application/json')) {
+          const text = await response.text()
+          if (text.trim()) {
+            try {
+              const data = JSON.parse(text)
+              setUsers(data.users || [])
+              
+              // Calcular estatísticas
+              const stats = {
+                total: data.users?.length || 0,
+                gratuito: data.users?.filter((u: User) => u.plan === 'Gratuito').length || 0,
+                mensal: data.users?.filter((u: User) => u.plan === 'Mensal').length || 0,
+                anual: data.users?.filter((u: User) => u.plan === 'Anual').length || 0,
+                creditos: data.users?.filter((u: User) => u.plan === 'Créditos').length || 0
+              }
+              setStats(stats)
+            } catch (parseError) {
+              console.error('Erro ao parsear JSON:', parseError)
+            }
+          }
         }
-        setStats(stats)
       }
     } catch (error) {
       console.error('Erro ao buscar usuários:', error)
@@ -93,8 +117,22 @@ export default function AdminPage() {
         alert('Plano atualizado com sucesso!')
         fetchUsers()
       } else {
-        const data = await response.json()
-        alert(data.error || 'Erro ao atualizar plano')
+        const contentType = response.headers.get('content-type')
+        if (contentType && contentType.includes('application/json')) {
+          const text = await response.text()
+          if (text.trim()) {
+            try {
+              const data = JSON.parse(text)
+              alert(data.error || 'Erro ao atualizar plano')
+            } catch (parseError) {
+              alert('Erro ao processar resposta do servidor')
+            }
+          } else {
+            alert('Resposta vazia do servidor')
+          }
+        } else {
+          alert('Erro no servidor')
+        }
       }
     } catch (error) {
       alert('Erro ao atualizar plano')

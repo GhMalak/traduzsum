@@ -30,8 +30,24 @@ export default function Home() {
   useEffect(() => {
     if (user) {
       fetch('/api/admin/check')
-        .then(res => res.json())
-        .then(data => setIsAdmin(data.isAdmin || false))
+        .then(async (res) => {
+          if (res.ok) {
+            const contentType = res.headers.get('content-type')
+            if (contentType && contentType.includes('application/json')) {
+              const text = await res.text()
+              if (text.trim()) {
+                try {
+                  const data = JSON.parse(text)
+                  return data
+                } catch {
+                  return { isAdmin: false }
+                }
+              }
+            }
+          }
+          return { isAdmin: false }
+        })
+        .then(data => setIsAdmin(data?.isAdmin || false))
         .catch(() => setIsAdmin(false))
     }
   }, [user])
@@ -68,10 +84,26 @@ export default function Home() {
         body: formData,
       })
 
-      const data = await response.json()
+      // Verificar se a resposta é JSON válido antes de parsear
+      const contentType = response.headers.get('content-type')
+      let data
+      if (contentType && contentType.includes('application/json')) {
+        const text = await response.text()
+        if (text.trim()) {
+          try {
+            data = JSON.parse(text)
+          } catch (parseError) {
+            throw new Error('Resposta inválida do servidor')
+          }
+        } else {
+          throw new Error('Resposta vazia do servidor')
+        }
+      } else {
+        throw new Error('Resposta não é JSON válido')
+      }
 
       if (!response.ok) {
-        throw new Error(data.error || 'Erro ao processar PDF')
+        throw new Error(data?.error || 'Erro ao processar PDF')
       }
 
       setText(data.text)

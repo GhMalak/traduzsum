@@ -46,9 +46,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     try {
       const response = await fetch('/api/auth/me')
       if (response.ok) {
-        const data = await response.json()
-        if (data.user) {
-          setUser(data.user)
+        // Verificar se a resposta tem conteúdo antes de parsear JSON
+        const contentType = response.headers.get('content-type')
+        if (contentType && contentType.includes('application/json')) {
+          const text = await response.text()
+          if (text.trim()) {
+            try {
+              const data = JSON.parse(text)
+              if (data.user) {
+                setUser(data.user)
+              }
+            } catch (parseError) {
+              console.error('Erro ao parsear JSON:', parseError)
+            }
+          }
         }
       }
     } catch (error) {

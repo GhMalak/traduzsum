@@ -24,10 +24,26 @@ export default function ForgotPasswordPage() {
         body: JSON.stringify({ email }),
       })
 
-      const data = await response.json()
+      // Verificar se a resposta é JSON válido antes de parsear
+      const contentType = response.headers.get('content-type')
+      let data
+      if (contentType && contentType.includes('application/json')) {
+        const text = await response.text()
+        if (text.trim()) {
+          try {
+            data = JSON.parse(text)
+          } catch (parseError) {
+            throw new Error('Resposta inválida do servidor. Verifique se o banco de dados está configurado.')
+          }
+        } else {
+          throw new Error('Resposta vazia do servidor. Verifique se o banco de dados está configurado.')
+        }
+      } else {
+        throw new Error('Erro no servidor. Verifique se o banco de dados está configurado.')
+      }
 
       if (!response.ok) {
-        throw new Error(data.error || 'Erro ao processar solicitação')
+        throw new Error(data?.error || 'Erro ao processar solicitação')
       }
 
       setSuccess(true)

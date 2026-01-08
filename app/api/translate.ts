@@ -7,12 +7,27 @@ export async function translateJurisprudence(text: string): Promise<string> {
     body: JSON.stringify({ text }),
   })
 
-  if (!response.ok) {
-    const error = await response.json()
-    throw new Error(error.error || 'Erro ao traduzir')
+  const contentType = response.headers.get('content-type')
+  if (!contentType || !contentType.includes('application/json')) {
+    throw new Error('Resposta inválida do servidor')
   }
 
-  const data = await response.json()
+  const responseText = await response.text()
+  if (!responseText.trim()) {
+    throw new Error('Resposta vazia do servidor')
+  }
+
+  let data
+  try {
+    data = JSON.parse(responseText)
+  } catch (parseError) {
+    throw new Error('Erro ao processar resposta do servidor')
+  }
+
+  if (!response.ok) {
+    throw new Error(data?.error || 'Erro ao traduzir')
+  }
+
   return data.result
 }
 
