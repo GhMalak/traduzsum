@@ -56,8 +56,24 @@ export async function POST(request: NextRequest) {
     return response
   } catch (error: any) {
     console.error('Erro no registro:', error)
+    console.error('Detalhes do erro:', {
+      message: error?.message,
+      code: error?.code,
+      name: error?.name,
+    })
+    
+    // Verificar se é erro de conexão com banco
+    let errorMessage = error.message || 'Erro ao criar conta'
+    if (error?.message?.includes('DATABASE_URL') || error?.message?.includes('database')) {
+      errorMessage = 'Erro de conexão com o banco de dados. Verifique a configuração do servidor.'
+    } else if (error?.message?.includes('Email já está em uso')) {
+      errorMessage = 'Este email já está cadastrado'
+    } else if (error?.message?.includes('CPF já está em uso')) {
+      errorMessage = 'Este CPF já está cadastrado'
+    }
+    
     return NextResponse.json(
-      { error: error.message || 'Erro ao criar conta' },
+      { error: errorMessage },
       { status: 400 }
     )
   }

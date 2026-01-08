@@ -56,8 +56,19 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ text, pages: numPages })
   } catch (error: any) {
     console.error('Erro ao processar PDF:', error)
+    console.error('Detalhes do erro:', {
+      message: error?.message,
+      code: error?.code,
+      name: error?.name,
+    })
+    
+    let errorMessage = 'Erro ao processar o PDF. Por favor, tente novamente.'
+    if (error?.message) {
+      errorMessage = `Erro ao processar o PDF: ${error.message}`
+    }
+    
     return NextResponse.json(
-      { error: 'Erro ao processar o PDF. Por favor, tente novamente.' },
+      { error: errorMessage },
       { status: 500 }
     )
   }

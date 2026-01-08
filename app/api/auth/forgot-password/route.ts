@@ -49,8 +49,22 @@ export async function POST(request: NextRequest) {
     })
   } catch (error: any) {
     console.error('Erro ao processar recuperação:', error)
+    console.error('Detalhes do erro:', {
+      message: error?.message,
+      code: error?.code,
+      name: error?.name,
+    })
+    
+    // Verificar se é erro de conexão com banco
+    let errorMessage = 'Erro ao processar solicitação'
+    if (error?.message?.includes('DATABASE_URL') || error?.message?.includes('database')) {
+      errorMessage = 'Erro de conexão com o banco de dados. Verifique a configuração do servidor.'
+    } else if (error?.message) {
+      errorMessage = error.message
+    }
+    
     return NextResponse.json(
-      { error: 'Erro ao processar solicitação' },
+      { error: errorMessage },
       { status: 500 }
     )
   }

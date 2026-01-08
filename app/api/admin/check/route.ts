@@ -43,8 +43,20 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ isAdmin })
   } catch (error: any) {
     console.error('Erro ao verificar admin:', error)
+    console.error('Detalhes do erro:', {
+      message: error?.message,
+      code: error?.code,
+      name: error?.name,
+    })
+    
+    // Verificar se é erro de conexão com banco
+    let errorMessage = 'Erro ao verificar permissões'
+    if (error?.message?.includes('DATABASE_URL') || error?.message?.includes('database')) {
+      errorMessage = 'Erro de conexão com o banco de dados. Verifique a configuração do servidor.'
+    }
+    
     return NextResponse.json(
-      { isAdmin: false, error: 'Erro ao verificar permissões' },
+      { isAdmin: false, error: errorMessage },
       { status: 500 }
     )
   }
