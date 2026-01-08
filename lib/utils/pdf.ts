@@ -100,6 +100,7 @@ export function generatePDF({ title, translatedText, fileName = 'traducao', user
   if (yPosition > pageHeight - footerSpace) {
     doc.addPage()
     yPosition = margin
+    
   }
 
   doc.setTextColor(0, 0, 0)
