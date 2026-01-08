@@ -74,22 +74,26 @@ function createPrismaClient(): PrismaClient {
   // Isso é necessário em ambientes serverless como Vercel
   let finalDatabaseUrl = databaseUrl!
   
+  // Em ambientes serverless (Vercel), limitar conexões para evitar conflitos
+  const isServerless = process.env.VERCEL || process.env.AWS_LAMBDA_FUNCTION_NAME
+  
   // Adicionar parâmetros de conexão para evitar problemas com prepared statements
   // Se já tem parâmetros, adicionar aos existentes; se não, criar
   if (!finalDatabaseUrl.includes('?')) {
-    // Não tem parâmetros, adicionar connection_limit=1
-    finalDatabaseUrl += '?connection_limit=1&pool_timeout=10'
+    // Não tem parâmetros
+    // Em serverless, usar connection_limit=1 e pool_timeout menor
+    finalDatabaseUrl += `?connection_limit=${isServerless ? '1' : '5'}&pool_timeout=${isServerless ? '5' : '10'}`
   } else {
     // Já tem parâmetros, adicionar apenas se não existirem
     if (!finalDatabaseUrl.includes('connection_limit=')) {
-      finalDatabaseUrl += '&connection_limit=1'
+      finalDatabaseUrl += `&connection_limit=${isServerless ? '1' : '5'}`
     }
     if (!finalDatabaseUrl.includes('pool_timeout=')) {
-      finalDatabaseUrl += '&pool_timeout=10'
+      finalDatabaseUrl += `&pool_timeout=${isServerless ? '5' : '10'}`
     }
   }
   
-  return new PrismaClient({
+  const client = new PrismaClient({
     datasources: {
       db: {
         url: finalDatabaseUrl,
@@ -97,6 +101,21 @@ function createPrismaClient(): PrismaClient {
     },
     log: process.env.NODE_ENV === 'development' ? ['query', 'error', 'warn'] : ['error'],
   })
+  
+  // Em serverless, desconectar após cada operação para evitar conflitos
+  if (isServerless) {
+    // Interceptar $disconnect para garantir que sempre desconecta
+    const originalDisconnect = client.$disconnect.bind(client)
+    client.$disconnect = async () => {
+      try {
+        await originalDisconnect()
+      } catch (error) {
+        // Ignorar erros ao desconectar
+      }
+    }
+  }
+  
+  return client
 }
 
 export const prisma =
