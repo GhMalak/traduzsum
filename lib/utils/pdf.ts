@@ -96,140 +96,28 @@ export function generatePDF({ title, translatedText, fileName = 'traducao', user
   })
   yPosition += 8
 
-  // Texto traduzido com formatação inteligente
+  // Texto traduzido - renderização simples
   if (yPosition > pageHeight - footerSpace) {
     doc.addPage()
     yPosition = margin
   }
 
-  // Processar texto para identificar tópicos principais e aplicar formatação
-  const processText = (text: string): Array<{ text: string; isBold: boolean; isTitle: boolean }> => {
-    // Processar linha por linha, mantendo todas as linhas (incluindo vazias para espaçamento)
-    const lines = text.split('\n')
-    const processed: Array<{ text: string; isBold: boolean; isTitle: boolean }> = []
-    
-    for (const line of lines) {
-      const trimmed = line.trim()
-      
-      // Se a linha estiver vazia, adicionar como espaçamento
-      if (!trimmed) {
-        processed.push({
-          text: '',
-          isBold: false,
-          isTitle: false
-        })
-        continue
-      }
-      
-      // Identificar títulos/tópicos principais (linhas em negrito que terminam com :)
-      // Verificar se tem ** no início E no fim, OU se tem ** em algum lugar e termina com :
-      const hasBoldMarkers = trimmed.startsWith('**') && trimmed.endsWith('**')
-      const isBoldLine = hasBoldMarkers
-      
-      // Identificar se é um título: tem ** e termina com : OU tem ** e contém : no meio
-      const hasTitlePattern = (trimmed.startsWith('**') && trimmed.includes(':') && trimmed.endsWith('**')) ||
-                              (trimmed.match(/^\*\*[^:]+:\*\*/) !== null)
-      
-      // Identificar se é um título (termina com : dentro do negrito)
-      const isTitleLine = hasTitlePattern || (isBoldLine && trimmed.includes(':'))
-      
-      // Remover marcadores markdown se houver (apenas os do início e fim)
-      let cleanText = trimmed
-      if (trimmed.startsWith('**') && trimmed.endsWith('**')) {
-        cleanText = trimmed.replace(/^\*\*/g, '').replace(/\*\*$/g, '').trim()
-      } else if (trimmed.startsWith('**')) {
-        cleanText = trimmed.replace(/^\*\*/g, '').trim()
-      } else if (trimmed.endsWith('**')) {
-        cleanText = trimmed.replace(/\*\*$/g, '').trim()
-      }
-      
-      // Garantir que o texto não fique vazio após limpeza
-      if (!cleanText) {
-        cleanText = trimmed
-      }
-      
-      // Tudo deve estar em negrito por padrão conforme instruções
-      const shouldBeBold = true
-      
-      processed.push({
-        text: cleanText,
-        isBold: shouldBeBold, // Tudo em negrito por padrão
-        isTitle: isTitleLine
-      })
-    }
-    
-    return processed
-  }
-
-  const processedText = processText(translatedText)
-  const lineHeight = 4.5
-  const titleSpacing = 2
-  const paragraphSpacing = 3
-
   doc.setTextColor(0, 0, 0)
-  doc.setFontSize(9.5)
+  doc.setFontSize(10)
+  doc.setFont('helvetica', 'normal')
   
-  for (const item of processedText) {
-    // Pular linhas vazias, mas adicionar espaçamento
-    if (!item.text) {
-      yPosition += paragraphSpacing / 2
-      continue
-    }
-    
+  // Remover marcadores markdown simples
+  const cleanText = translatedText.replace(/\*\*/g, '')
+  const textLines = doc.splitTextToSize(cleanText, maxWidth)
+  
+  textLines.forEach((line: string) => {
     if (yPosition > pageHeight - footerSpace) {
       doc.addPage()
       yPosition = margin
     }
-    
-    // Aplicar formatação baseada no tipo de linha
-    if (item.isTitle) {
-      // Tópico principal/título - AZUL e negrito
-      doc.setFontSize(10.5)
-      doc.setFont('helvetica', 'bold')
-      // Usar azul para títulos (accentColor que já está definido como blue-500)
-      doc.setTextColor(accentColor[0], accentColor[1], accentColor[2])
-      
-      const titleLines = doc.splitTextToSize(item.text, maxWidth)
-      titleLines.forEach((line: string) => {
-        if (yPosition > pageHeight - footerSpace) {
-          doc.addPage()
-          yPosition = margin
-        }
-        doc.text(line, margin, yPosition)
-        yPosition += lineHeight + 0.5
-      })
-      
-      yPosition += titleSpacing
-      doc.setFontSize(9.5)
-      // RESETAR a cor para preto após títulos, para garantir que o próximo texto não fique azul
-      doc.setTextColor(0, 0, 0)
-    } else {
-      // Resto do texto - SEMPRE em NEGRITO PRETO (não azul)
-      doc.setFont('helvetica', 'bold')
-      // FORÇAR cor PRETA (RGB: 0, 0, 0) antes de cada renderização
-      doc.setTextColor(0, 0, 0)
-      doc.setFontSize(9.5) // Garantir tamanho padrão
-      
-      const boldLines = doc.splitTextToSize(item.text, maxWidth)
-      boldLines.forEach((line: string) => {
-        if (yPosition > pageHeight - footerSpace) {
-          doc.addPage()
-          yPosition = margin
-          // Ao criar nova página, garantir cor preta
-          doc.setTextColor(0, 0, 0)
-        }
-        // FORÇAR cor PRETA em cada linha para garantir que não herde azul dos títulos
-        doc.setTextColor(0, 0, 0)
-        doc.setFont('helvetica', 'bold')
-        doc.text(line, margin, yPosition)
-        yPosition += lineHeight + 0.5
-      })
-      
-      yPosition += paragraphSpacing
-      // Manter cor preta após o texto
-      doc.setTextColor(0, 0, 0)
-    }
-  }
+    doc.text(line, margin, yPosition)
+    yPosition += 5
+  })
 
   // Rodapé em todas as páginas (compacto)
   const totalPages = doc.getNumberOfPages()
