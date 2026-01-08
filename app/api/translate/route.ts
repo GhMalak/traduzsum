@@ -403,7 +403,7 @@ ${text}
         },
       ],
       temperature: 0.0, // Reduzido para maior consistência e precisão
-      max_tokens: 4096,
+      max_tokens: 16384, // Aumentado para suportar documentos de até 30 páginas
     })
 
     const translatedText = completion.choices[0]?.message?.content || ''
