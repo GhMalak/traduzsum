@@ -201,9 +201,12 @@ export function generatePDF({ title, translatedText, fileName = 'traducao', user
       
       yPosition += titleSpacing
       doc.setFontSize(9.5)
-    } else if (item.isBold) {
-      // Resto do texto - NEGRITO (preto)
+      // RESETAR a cor para preto após títulos, para garantir que o próximo texto não fique azul
+      doc.setTextColor(0, 0, 0)
+    } else {
+      // Resto do texto - NEGRITO (PRETO) - não azul
       doc.setFont('helvetica', 'bold')
+      // GARANTIR que a cor seja PRETO (0, 0, 0) e não azul
       doc.setTextColor(0, 0, 0)
       
       const boldLines = doc.splitTextToSize(item.text, maxWidth)
@@ -212,22 +215,8 @@ export function generatePDF({ title, translatedText, fileName = 'traducao', user
           doc.addPage()
           yPosition = margin
         }
-        doc.text(line, margin, yPosition)
-        yPosition += lineHeight + 0.5
-      })
-      
-      yPosition += paragraphSpacing
-    } else {
-      // Texto normal (caso não esteja em negrito - fallback)
-      doc.setFont('helvetica', 'normal')
-      doc.setTextColor(0, 0, 0)
-      
-      const normalLines = doc.splitTextToSize(item.text, maxWidth)
-      normalLines.forEach((line: string) => {
-        if (yPosition > pageHeight - footerSpace) {
-          doc.addPage()
-          yPosition = margin
-        }
+        // Garantir que a cor continue sendo preta
+        doc.setTextColor(0, 0, 0)
         doc.text(line, margin, yPosition)
         yPosition += lineHeight + 0.5
       })
