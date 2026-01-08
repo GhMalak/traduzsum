@@ -70,10 +70,29 @@ function createPrismaClient(): PrismaClient {
   }
 
   // DATABASE_URL existe - usar normalmente
+  // Adicionar parâmetros para evitar problemas com prepared statements no PostgreSQL
+  // Isso é necessário em ambientes serverless como Vercel
+  let finalDatabaseUrl = databaseUrl!
+  
+  // Adicionar parâmetros de conexão para evitar problemas com prepared statements
+  // Se já tem parâmetros, adicionar aos existentes; se não, criar
+  if (!finalDatabaseUrl.includes('?')) {
+    // Não tem parâmetros, adicionar connection_limit=1
+    finalDatabaseUrl += '?connection_limit=1&pool_timeout=10'
+  } else {
+    // Já tem parâmetros, adicionar apenas se não existirem
+    if (!finalDatabaseUrl.includes('connection_limit=')) {
+      finalDatabaseUrl += '&connection_limit=1'
+    }
+    if (!finalDatabaseUrl.includes('pool_timeout=')) {
+      finalDatabaseUrl += '&pool_timeout=10'
+    }
+  }
+  
   return new PrismaClient({
     datasources: {
       db: {
-        url: databaseUrl!,
+        url: finalDatabaseUrl,
       },
     },
     log: process.env.NODE_ENV === 'development' ? ['query', 'error', 'warn'] : ['error'],

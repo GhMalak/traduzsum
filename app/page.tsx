@@ -155,42 +155,64 @@ export default function Home() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50">
       {/* Navigation */}
-      <nav className="bg-white shadow-sm border-b">
+      <nav className="bg-white shadow-md border-b sticky top-0 z-50">
         <div className="container mx-auto px-4 py-4 max-w-6xl flex justify-between items-center">
-          <Link href="/" className="text-2xl font-bold text-gray-900">
+          <Link href="/" className="text-2xl font-bold text-gray-900 hover:text-primary-600 transition-colors">
             Traduz<span className="text-primary-600">Sum</span>
           </Link>
-          <div className="flex gap-4 items-center">
-            <Link href="/planos" className="text-gray-600 hover:text-primary-600 font-medium">
+          <div className="flex gap-3 items-center">
+            <Link 
+              href="/planos" 
+              className="px-4 py-2 text-gray-700 hover:text-primary-600 font-medium rounded-lg hover:bg-gray-50 transition-all"
+            >
               Planos
             </Link>
             {user ? (
-              <>
-                <Link href="/dashboard" className="text-gray-600 hover:text-primary-600 font-medium">
-                  Dashboard
-                </Link>
+              <div className="flex items-center gap-3 ml-2 pl-3 border-l border-gray-200">
                 {isAdmin && (
-                  <Link href="/admin" className="text-red-600 hover:text-red-700 font-medium">
+                  <Link 
+                    href="/admin" 
+                    className="px-3 py-2 text-red-600 hover:text-red-700 font-medium rounded-lg hover:bg-red-50 transition-all"
+                  >
                     Admin
                   </Link>
                 )}
-                <span className="text-gray-600">Olá, {user.name.split(' ')[0]}</span>
+                <Link 
+                  href="/dashboard" 
+                  className="px-4 py-2 text-gray-700 hover:text-primary-600 font-medium rounded-lg hover:bg-gray-50 transition-all"
+                >
+                  Dashboard
+                </Link>
+                <div className="flex items-center gap-2 px-3 py-2 bg-primary-50 rounded-lg border border-primary-100">
+                  <div className="w-8 h-8 bg-primary-600 rounded-full flex items-center justify-center text-white font-bold text-sm">
+                    {user.name.charAt(0).toUpperCase()}
+                  </div>
+                  <span className="text-gray-700 font-medium hidden sm:inline">
+                    {user.name.split(' ')[0]}
+                  </span>
+                </div>
                 <button
                   onClick={logout}
-                  className="text-gray-600 hover:text-primary-600 font-medium"
+                  className="px-4 py-2 text-gray-600 hover:text-red-600 font-medium rounded-lg hover:bg-red-50 transition-all"
                 >
                   Sair
                 </button>
-              </>
+              </div>
             ) : (
-              <>
-                <Link href="/login" className="text-gray-600 hover:text-primary-600 font-medium">
+              <div className="flex items-center gap-3 ml-2">
+                <Link 
+                  href="/login" 
+                  className="px-5 py-2.5 text-primary-600 hover:text-primary-700 font-semibold rounded-lg hover:bg-primary-50 transition-all border border-primary-200"
+                >
                   Entrar
                 </Link>
-                <Link href="/register" className="bg-primary-600 text-white px-4 py-2 rounded-lg hover:bg-primary-700 transition-colors font-medium">
+                <Link 
+                  href="/register" 
+                  className="px-5 py-2.5 bg-gradient-to-r from-primary-600 to-primary-700 text-white font-semibold rounded-lg hover:from-primary-700 hover:to-primary-800 transition-all shadow-md hover:shadow-lg transform hover:scale-105"
+                >
                   Criar conta
                 </Link>
-              </>
+              </div>
             )}
           </div>
         </div>
@@ -208,19 +230,90 @@ export default function Home() {
         </header>
 
         {/* Main Content */}
-        <div className="grid md:grid-cols-2 gap-6">
-          {/* Input Section */}
-          <div className="bg-white rounded-2xl shadow-xl p-6 border border-gray-100">
-            <div className="flex items-center gap-3 mb-6">
-              <div className="p-2 bg-primary-100 rounded-lg">
-                <svg className="w-6 h-6 text-primary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+        {!user ? (
+          /* Welcome Message for Non-Logged Users */
+          <div className="max-w-3xl mx-auto mt-12 mb-8">
+            <div className="bg-gradient-to-r from-primary-600 to-indigo-600 rounded-2xl shadow-2xl p-8 text-center text-white">
+              <div className="mb-6">
+                <svg className="w-16 h-16 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
                 </svg>
               </div>
-              <h2 className="text-2xl font-bold text-gray-900">
-                Envie seu texto jurídico
+              <h2 className="text-3xl font-bold mb-4">
+                Faça login para começar
               </h2>
+              <p className="text-lg text-primary-100 mb-8">
+                Crie sua conta gratuita ou faça login para traduzir textos jurídicos
+              </p>
+              <div className="flex gap-4 justify-center">
+                <Link 
+                  href="/register" 
+                  className="px-8 py-3 bg-white text-primary-600 font-bold rounded-xl hover:bg-gray-100 transition-all shadow-lg hover:shadow-xl transform hover:scale-105"
+                >
+                  Criar conta gratuita
+                </Link>
+                <Link 
+                  href="/login" 
+                  className="px-8 py-3 bg-transparent border-2 border-white text-white font-bold rounded-xl hover:bg-white hover:text-primary-600 transition-all"
+                >
+                  Já tenho conta
+                </Link>
+              </div>
             </div>
+            
+            {/* Features Preview */}
+            <div className="grid md:grid-cols-3 gap-6 mt-8">
+              <div className="bg-white rounded-xl p-6 shadow-lg border border-gray-100 text-center">
+                <div className="w-12 h-12 bg-primary-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <svg className="w-6 h-6 text-primary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                  </svg>
+                </div>
+                <h3 className="font-bold text-gray-900 mb-2">Tradução de Texto</h3>
+                <p className="text-sm text-gray-600">Cole textos jurídicos e receba traduções simplificadas</p>
+              </div>
+              <div className="bg-white rounded-xl p-6 shadow-lg border border-gray-100 text-center">
+                <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <svg className="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                  </svg>
+                </div>
+                <h3 className="font-bold text-gray-900 mb-2">Upload de PDF</h3>
+                <p className="text-sm text-gray-600">Envie PDFs e receba traduções completas (planos pagos)</p>
+              </div>
+              <div className="bg-white rounded-xl p-6 shadow-lg border border-gray-100 text-center">
+                <div className="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <svg className="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                  </svg>
+                </div>
+                <h3 className="font-bold text-gray-900 mb-2">Download PDF</h3>
+                <p className="text-sm text-gray-600">Baixe suas traduções em formato PDF</p>
+              </div>
+            </div>
+          </div>
+        ) : (
+          /* Logged User Content */
+          <div className="grid md:grid-cols-2 gap-6">
+            {/* Input Section */}
+            <div className="bg-white rounded-2xl shadow-xl p-6 border border-gray-100">
+              <div className="flex items-center justify-between mb-6">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 bg-primary-100 rounded-lg">
+                    <svg className="w-6 h-6 text-primary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                    </svg>
+                  </div>
+                  <h2 className="text-2xl font-bold text-gray-900">
+                    Envie seu texto jurídico
+                  </h2>
+                </div>
+                {user && (
+                  <div className="text-sm text-gray-500 bg-gray-50 px-3 py-1.5 rounded-lg">
+                    Plano: <span className="font-semibold text-primary-600">{userPlan}</span>
+                  </div>
+                )}
+              </div>
 
             {/* Mode Selector */}
             <div className="flex gap-2 mb-6 p-1.5 bg-gray-100 rounded-xl">
@@ -323,7 +416,7 @@ export default function Home() {
               )}
 
               {/* Text Input */}
-              <div>
+              <div className="relative">
                 <textarea
                   value={text}
                   onChange={(e) => setText(e.target.value)}
@@ -332,14 +425,30 @@ export default function Home() {
                       ? 'O texto extraído do PDF aparecerá aqui...'
                       : 'Cole aqui a jurisprudência, súmula ou texto jurídico que deseja traduzir...'
                   }
-                  className="w-full h-96 p-4 border-2 border-gray-200 rounded-lg focus:border-primary-500 focus:outline-none resize-none text-gray-700 placeholder-gray-400"
-                  disabled={loading || inputMode === 'pdf'}
+                  className="w-full h-96 p-4 border-2 border-gray-200 rounded-lg focus:border-primary-500 focus:outline-none resize-none text-gray-700 placeholder-gray-400 disabled:bg-gray-50 disabled:cursor-not-allowed"
+                  disabled={loading || inputMode === 'pdf' || !user}
                 />
+                {!user && (
+                  <div className="absolute inset-0 bg-white bg-opacity-90 rounded-lg flex items-center justify-center z-10">
+                    <div className="text-center p-6">
+                      <svg className="w-16 h-16 text-gray-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                      </svg>
+                      <p className="text-gray-600 font-medium mb-3">Faça login para usar esta funcionalidade</p>
+                      <Link 
+                        href="/login"
+                        className="inline-block px-6 py-2 bg-primary-600 text-white font-semibold rounded-lg hover:bg-primary-700 transition-colors"
+                      >
+                        Fazer login
+                      </Link>
+                    </div>
+                  </div>
+                )}
               </div>
               <div className="flex gap-3">
                 <button
                   type="submit"
-                  disabled={loading || !text.trim()}
+                  disabled={loading || !text.trim() || !user}
                   className="flex-1 bg-gradient-to-r from-primary-600 to-primary-700 hover:from-primary-700 hover:to-primary-800 text-white font-bold py-3.5 px-6 rounded-xl transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:shadow-xl transform hover:scale-105 disabled:transform-none flex items-center justify-center gap-2"
                 >
                   {loading ? (
@@ -417,8 +526,8 @@ export default function Home() {
             )}
           </div>
 
-          {/* Output Section */}
-          <div className="bg-white rounded-2xl shadow-xl p-6 border border-gray-100">
+              {/* Output Section */}
+              <div className="bg-white rounded-2xl shadow-xl p-6 border border-gray-100">
             <div className="flex items-center gap-3 mb-6">
               <div className="p-2 bg-green-100 rounded-lg">
                 <svg className="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -488,8 +597,9 @@ export default function Home() {
                 </button>
               </div>
             )}
-          </div>
-        </div>
+              </div>
+            </div>
+        )}
 
         {/* Footer */}
         <footer className="mt-12 text-center text-gray-500 text-sm">

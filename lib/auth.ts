@@ -84,21 +84,53 @@ export async function createUser(name: string, email: string, cpf: string, passw
 }
 
 export async function findUserByEmail(email: string): Promise<User | null> {
-  const user = await prisma.user.findUnique({
-    where: { email: email.toLowerCase() }
-  })
+  try {
+    const user = await prisma.user.findUnique({
+      where: { email: email.toLowerCase() }
+    })
 
-  if (!user) return null
+    if (!user) return null
 
-  return {
-    id: user.id,
-    name: user.name,
-    email: user.email,
-    cpf: user.cpf,
-    password: user.password,
-    plan: user.plan as 'Gratuito' | 'Mensal' | 'Anual' | 'Créditos',
-    credits: user.credits || undefined,
-    createdAt: user.createdAt
+    return {
+      id: user.id,
+      name: user.name,
+      email: user.email,
+      cpf: user.cpf,
+      password: user.password,
+      plan: user.plan as 'Gratuito' | 'Mensal' | 'Anual' | 'Créditos',
+      credits: user.credits || undefined,
+      createdAt: user.createdAt
+    }
+  } catch (error: any) {
+    // Tratar erro específico de prepared statement
+    if (error?.message?.includes('prepared statement') || error?.code === '42P05') {
+      console.error('Erro de prepared statement detectado, tentando reconectar...')
+      
+      // Desconectar e reconectar
+      await prisma.$disconnect()
+      await prisma.$connect()
+      
+      // Tentar novamente
+      const user = await prisma.user.findUnique({
+        where: { email: email.toLowerCase() }
+      })
+
+      if (!user) return null
+
+      return {
+        id: user.id,
+        name: user.name,
+        email: user.email,
+        cpf: user.cpf,
+        password: user.password,
+        plan: user.plan as 'Gratuito' | 'Mensal' | 'Anual' | 'Créditos',
+        credits: user.credits || undefined,
+        createdAt: user.createdAt
+      }
+    }
+    
+    // Se não for erro de prepared statement, relançar
+    throw error
   }
 }
 
@@ -147,24 +179,53 @@ export async function validateLogin(email: string, password: string): Promise<Us
 }
 
 export async function saveResetToken(email: string, token: string): Promise<void> {
-  // Remove tokens expirados
-  const now = new Date()
-  await prisma.resetToken.deleteMany({
-    where: {
-      expiresAt: {
-        lt: now
+  try {
+    // Remove tokens expirados
+    const now = new Date()
+    await prisma.resetToken.deleteMany({
+      where: {
+        expiresAt: {
+          lt: now
+        }
       }
+    })
+    
+    // Adiciona novo token (válido por 1 hora)
+    await prisma.resetToken.create({
+      data: {
+        token,
+        email: email.toLowerCase(),
+        expiresAt: new Date(now.getTime() + 60 * 60 * 1000) // 1 hora
+      }
+    })
+  } catch (error: any) {
+    // Tratar erro específico de prepared statement
+    if (error?.message?.includes('prepared statement') || error?.code === '42P05') {
+      console.error('Erro de prepared statement em saveResetToken, tentando reconectar...')
+      await prisma.$disconnect()
+      await prisma.$connect()
+      
+      // Tentar novamente
+      const now = new Date()
+      await prisma.resetToken.deleteMany({
+        where: {
+          expiresAt: {
+            lt: now
+          }
+        }
+      })
+      
+      await prisma.resetToken.create({
+        data: {
+          token,
+          email: email.toLowerCase(),
+          expiresAt: new Date(now.getTime() + 60 * 60 * 1000)
+        }
+      })
+      return
     }
-  })
-  
-  // Adiciona novo token (válido por 1 hora)
-  await prisma.resetToken.create({
-    data: {
-      token,
-      email: email.toLowerCase(),
-      expiresAt: new Date(now.getTime() + 60 * 60 * 1000) // 1 hora
-    }
-  })
+    throw error
+  }
 }
 
 export async function validateResetToken(token: string): Promise<string | null> {
