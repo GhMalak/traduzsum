@@ -3,10 +3,13 @@ import { prisma } from './db'
 /**
  * Helper para executar operações Prisma com retry automático
  * quando detecta erro de prepared statement (42P05)
+ * 
+ * NOTA: Se o erro persistir mesmo com retry, pode ser necessário
+ * desabilitar prepared statements na URL: ?statement_cache_size=0
  */
 export async function withRetry<T>(
   operation: () => Promise<T>,
-  maxRetries = 2
+  maxRetries = 1 // Reduzido para 1 porque vamos confiar no statement_cache_size=0
 ): Promise<T> {
   let lastError: any
   
@@ -26,13 +29,18 @@ export async function withRetry<T>(
         console.warn(`⚠️ Erro de prepared statement detectado (tentativa ${attempt + 1}/${maxRetries + 1}), reconectando...`)
         
         try {
-          // Desconectar e reconectar
+          // Desconectar completamente e aguardar
           await prisma.$disconnect()
-          // Aguardar um pouco antes de reconectar
-          await new Promise(resolve => setTimeout(resolve, 100 * (attempt + 1)))
+          // Aguardar mais tempo para garantir que a conexão foi completamente fechada
+          await new Promise(resolve => setTimeout(resolve, 200 * (attempt + 1)))
+          
+          // Reconectar
           await prisma.$connect()
-        } catch (reconnectError) {
-          console.error('❌ Erro ao reconectar:', reconnectError)
+          
+          // Aguardar um pouco mais após reconectar
+          await new Promise(resolve => setTimeout(resolve, 100))
+        } catch (reconnectError: any) {
+          console.error('❌ Erro ao reconectar:', reconnectError?.message || reconnectError)
           // Continuar tentando mesmo se a reconexão falhar
         }
         

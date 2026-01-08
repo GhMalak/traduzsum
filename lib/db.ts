@@ -74,22 +74,36 @@ function createPrismaClient(): PrismaClient {
   // Isso é necessário em ambientes serverless como Vercel
   let finalDatabaseUrl = databaseUrl!
   
-  // Em ambientes serverless (Vercel), limitar conexões para evitar conflitos
+  // Em ambientes serverless (Vercel), limitar conexões e desabilitar cache de prepared statements
   const isServerless = process.env.VERCEL || process.env.AWS_LAMBDA_FUNCTION_NAME
   
   // Adicionar parâmetros de conexão para evitar problemas com prepared statements
   // Se já tem parâmetros, adicionar aos existentes; se não, criar
+  const params: string[] = []
+  
   if (!finalDatabaseUrl.includes('?')) {
-    // Não tem parâmetros
-    // Em serverless, usar connection_limit=1 e pool_timeout menor
-    finalDatabaseUrl += `?connection_limit=${isServerless ? '1' : '5'}&pool_timeout=${isServerless ? '5' : '10'}`
+    // Não tem parâmetros, construir do zero
+    params.push(`connection_limit=${isServerless ? '1' : '5'}`)
+    params.push(`pool_timeout=${isServerless ? '5' : '10'}`)
+    // CRÍTICO: Desabilitar cache de prepared statements para evitar conflitos em serverless
+    if (isServerless) {
+      params.push('statement_cache_size=0')
+    }
+    finalDatabaseUrl += '?' + params.join('&')
   } else {
-    // Já tem parâmetros, adicionar apenas se não existirem
+    // Já tem parâmetros, adicionar apenas os que não existem
     if (!finalDatabaseUrl.includes('connection_limit=')) {
-      finalDatabaseUrl += `&connection_limit=${isServerless ? '1' : '5'}`
+      params.push(`connection_limit=${isServerless ? '1' : '5'}`)
     }
     if (!finalDatabaseUrl.includes('pool_timeout=')) {
-      finalDatabaseUrl += `&pool_timeout=${isServerless ? '5' : '10'}`
+      params.push(`pool_timeout=${isServerless ? '5' : '10'}`)
+    }
+    // CRÍTICO: Desabilitar cache de prepared statements em serverless
+    if (isServerless && !finalDatabaseUrl.includes('statement_cache_size=')) {
+      params.push('statement_cache_size=0')
+    }
+    if (params.length > 0) {
+      finalDatabaseUrl += '&' + params.join('&')
     }
   }
   
