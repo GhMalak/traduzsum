@@ -342,13 +342,59 @@ Você pode e DEVE usar seu conhecimento sobre:
 - Hierarquia das normas (Constituição > Leis > Decretos)
 - Estrutura do Poder Judiciário (STF, STJ, TRFs, TJs, etc.)
 - Conceitos jurídicos fundamentais
+- Questões de concursos públicos anteriores (banco de provas de concursos realizados)
 
 Use esse conhecimento para:
 - Explicar melhor conceitos que aparecem no texto
 - Contextualizar decisões quando necessário
 - Garantir que a tradução reflita corretamente o significado jurídico
+- Buscar questões relacionadas de concursos públicos anteriores quando solicitado
 
 MAS: NUNCA adicione informações que não estejam no texto original. Use o conhecimento apenas para MELHORAR a explicação, não para ADICIONAR conteúdo.
+
+# BUSCA DE QUESTÕES RELACIONADAS DE CONCURSOS PÚBLICOS
+
+Além da tradução, você DEVE buscar e apresentar questões relacionadas que já apareceram em concursos públicos anteriores.
+
+## REGRAS PARA BUSCA DE QUESTÕES:
+
+1. **RELEVÂNCIA ESTRITA:**
+   - As questões DEVEM ser EXATAMENTE relacionadas ao assunto tratado no texto original
+   - Não traga questões genéricas ou tangencialmente relacionadas
+   - O tema principal da questão deve estar diretamente conectado ao assunto buscado
+   - Exemplo: Se buscar sobre "súmula do nepotismo", trazer questões sobre nepotismo, não questões genéricas sobre administração pública
+
+2. **QUANTIDADE MÍNIMA:**
+   - SEMPRE trazer pelo menos 5 questões relacionadas
+   - Se houver mais questões relevantes, pode trazer até 10 questões
+
+3. **FORMATO DAS QUESTÕES:**
+   - Cada questão deve incluir:
+     * Texto completo da questão (enunciado)
+     * Alternativas (A, B, C, D, E) ou (Certo ou Errado)
+     * Resposta correta (gabarito)
+     * Órgão/concurso (se possível identificar: Ex: "TRF4", "TJSP", "TRE", etc.)
+     * Ano aproximado (se possível identificar)
+
+4. **FONTE E AUTENTICIDADE:**
+   - Busque questões REAIS que já apareceram em concursos públicos
+   - Use seu conhecimento sobre bancos de provas de concursos (FGV, CESPE, VUNESP, FCC, etc.)
+   - Priorize questões de concursos importantes (TJ, TRT, TRE, MP, DP, PF, PRF, etc.)
+   - Se não souber o ano ou órgão exato, indique "Concurso público" ou "Questão adaptada"
+
+5. **PRECISÃO DO CONTEÚDO:**
+   - As questões devem testar conhecimentos sobre o MESMO assunto tratado
+   - Exemplo: Se o texto fala sobre "súmula 13 do STJ sobre nepotismo", trazer questões sobre:
+     * Nepotismo em concursos públicos
+     * Súmula 13 do STJ
+     * Proibição de nepotismo
+     * Parentesco em concursos
+     * NÃO trazer questões sobre outros tipos de nepotismo não relacionados
+
+6. **DIVERSIDADE:**
+   - Varie os aspectos do assunto tratado nas questões
+   - Inclua questões que abordem diferentes ângulos do mesmo tema
+   - Mantenha sempre a relevância direta ao assunto buscado
 
 # FINALIZAÇÃO
 
@@ -391,15 +437,62 @@ ${text}
 
 ---
 
-**INSTRUÇÕES FINAIS:**
+**INSTRUÇÕES PARA A TRADUÇÃO:**
 - Crie um RESUMO FACILITADOR, não uma tradução palavra por palavra
 - Organize em TÓPICOS PRINCIPAIS com explicações claras
 - Use formatação com **NEGRITO** para tópicos principais (ex: **DECISÃO:**, **REGRAS:**, **EXCEÇÕES:**)
 - Seja conciso mas completo - foque nos pontos essenciais
 - Destaque claramente TODAS as exceções e condições
 - Use linguagem acessível mas precisa
-- Responda APENAS com o texto traduzido formatado, sem introduções ou comentários
-- Comece diretamente com o conteúdo traduzido formatado`,
+
+**BUSCA DE QUESTÕES RELACIONADAS DE CONCURSOS (OBRIGATÓRIO):**
+Após a tradução, você DEVE buscar e apresentar pelo menos 5 questões relacionadas que já apareceram em concursos públicos anteriores.
+
+**REQUISITOS DAS QUESTÕES:**
+1. As questões DEVEM ser EXATAMENTE relacionadas ao assunto tratado no texto original
+2. Mínimo de 5 questões, podendo chegar até 10 se houver mais questões relevantes
+3. Cada questão deve incluir:
+   - Enunciado completo da questão
+   - Todas as alternativas (A, B, C, D, E)
+   - Resposta correta (gabarito)
+   - Órgão/concurso (se possível: Ex: "TJSP", "TRF4", "TRE", "MP", etc.)
+   - Ano aproximado (se possível)
+4. Busque questões REAIS de bancas conhecidas (FGV, CESPE, VUNESP, FCC, etc.)
+5. O tema da questão deve estar DIRETAMENTE relacionado ao assunto buscado
+6. Priorize questões de concursos importantes (TJ, TRT, TRE, MP, DP, PF, PRF, etc.)
+
+**FORMATO DA RESPOSTA (ESTRUTURA OBRIGATÓRIA):**
+
+Inicie diretamente com a tradução formatada, seguida de uma seção de questões relacionadas.
+
+Após a tradução, adicione uma quebra de linha dupla e então:
+
+---
+
+**QUESTÕES RELACIONADAS DE CONCURSOS PÚBLICOS**
+
+[Questão 1]
+**Enunciado:** [Texto completo da questão]
+
+A) [Alternativa A]
+B) [Alternativa B]
+C) [Alternativa C]
+D) [Alternativa D]
+E) [Alternativa E]
+
+**Gabarito:** [Letra correta]
+**Fonte:** [Órgão/Concurso e ano, se conhecido]
+
+[Questão 2]
+... (repita o formato para todas as questões)
+
+---
+
+**IMPORTANTE:**
+- Responda APENAS com o conteúdo (tradução + questões), sem introduções ou comentários meta
+- Comece diretamente com a tradução formatada
+- Após a tradução, adicione as questões relacionadas seguindo o formato acima
+- Garanta que TODAS as questões sejam EXATAMENTE relacionadas ao assunto tratado`,
         },
       ],
       temperature: 0.0, // Reduzido para maior consistência e precisão
