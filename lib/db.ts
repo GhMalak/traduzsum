@@ -111,11 +111,15 @@ function createPrismaClient(): PrismaClient {
   return client
 }
 
-export const prisma =
-  globalForPrisma.prisma ??
-  createPrismaClient()
+// Em serverless (Vercel), criar nova instância para cada requisição
+// para evitar conflitos de prepared statements compartilhados
+const isServerless = process.env.VERCEL || process.env.AWS_LAMBDA_FUNCTION_NAME
 
-if (process.env.NODE_ENV !== 'production') {
+export const prisma = isServerless
+  ? createPrismaClient() // Nova instância em cada requisição serverless
+  : (globalForPrisma.prisma ?? createPrismaClient()) // Singleton em desenvolvimento
+
+if (process.env.NODE_ENV !== 'production' && !isServerless) {
   globalForPrisma.prisma = prisma
 }
 
