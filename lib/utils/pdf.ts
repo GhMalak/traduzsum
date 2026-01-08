@@ -26,42 +26,44 @@ export function generatePDF({ title, translatedText, fileName = 'traducao', user
   // Cabeçalho clean e profissional
   const headerHeight = 35
   
-  // Fundo sutil com gradiente simulado (linha colorida)
-  doc.setFillColor(primaryColor[0], primaryColor[1], primaryColor[2])
-  doc.rect(0, 0, pageWidth, 3, 'F') // Linha superior fina
-  
-  // Fundo branco com sombra sutil
+  // Fundo branco limpo
   doc.setFillColor(255, 255, 255)
-  doc.rect(0, 3, pageWidth, headerHeight - 3, 'F')
+  doc.rect(0, 0, pageWidth, headerHeight, 'F')
   
-  // Linha divisória sutil
+  // Linha divisória sutil na parte inferior
   doc.setDrawColor(lightGray[0], lightGray[1], lightGray[2])
   doc.setLineWidth(0.5)
   doc.line(0, headerHeight, pageWidth, headerHeight)
   
-  yPosition = 12
+  // Centralizar logo no header
+  yPosition = headerHeight / 2
 
-  // Logo/Título da empresa (destacado mas elegante)
+  // Logo/Título da empresa (centralizado)
   doc.setTextColor(primaryColor[0], primaryColor[1], primaryColor[2])
   doc.setFontSize(22)
   doc.setFont('helvetica', 'bold')
   
-  // Efeito de destaque sutil na logo (fundo levemente colorido)
-  doc.setFillColor(245, 247, 250) // gray-50
-  doc.roundedRect(margin - 3, yPosition - 8, 75, 12, 2, 2, 'F')
+  // Calcular largura total da logo para centralizar
+  const logoText = 'TraduzSum'
+  const logoWidth = doc.getTextWidth(logoText)
+  const logoX = (pageWidth - logoWidth) / 2
   
-  doc.text('Traduz', margin, yPosition)
+  // Parte "Traduz"
+  const traducWidth = doc.getTextWidth('Traduz')
+  doc.text('Traduz', logoX, yPosition - 2)
   
   // Parte "Sum" em cor diferente para destaque sutil
-  const traducWidth = doc.getTextWidth('Traduz')
   doc.setTextColor(primaryLight[0], primaryLight[1], primaryLight[2])
-  doc.text('Sum', margin + traducWidth + 1, yPosition)
+  doc.text('Sum', logoX + traducWidth + 1, yPosition - 2)
   
-  // Subtítulo elegante
+  // Subtítulo elegante (centralizado)
   doc.setTextColor(100, 100, 100)
   doc.setFontSize(8)
   doc.setFont('helvetica', 'normal')
-  doc.text('Tradução Simplificada de Textos Jurídicos', margin, yPosition + 6)
+  const subtitle = 'Tradução Simplificada de Textos Jurídicos'
+  const subtitleWidth = doc.getTextWidth(subtitle)
+  const subtitleX = (pageWidth - subtitleWidth) / 2
+  doc.text(subtitle, subtitleX, yPosition + 5)
 
   // Data e hora (lado direito, discreto)
   const now = new Date()
@@ -75,7 +77,7 @@ export function generatePDF({ title, translatedText, fileName = 'traducao', user
   doc.setTextColor(150, 150, 150)
   doc.setFontSize(7)
   doc.setFont('helvetica', 'normal')
-  doc.text(dateStr, pageWidth - margin, yPosition + 2, { align: 'right' })
+  doc.text(dateStr, pageWidth - margin, headerHeight - 5, { align: 'right' })
 
   yPosition = headerHeight + 12
 
