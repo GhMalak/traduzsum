@@ -53,19 +53,20 @@ function _createPrismaClient(): PrismaClient {
     })
   }
 
-  // Adicionar parâmetros de conexão para evitar conflitos
+  // Em serverless, adicionar identificador único à conexão para forçar nova sessão
+  // Isso evita prepared statements compartilhados entre requisições
   const isServerless = process.env.VERCEL || process.env.AWS_LAMBDA_FUNCTION_NAME
   let finalDatabaseUrl = databaseUrl
   
-  if (!finalDatabaseUrl.includes('?')) {
-    finalDatabaseUrl += `?connection_limit=${isServerless ? '1' : '5'}&pool_timeout=${isServerless ? '5' : '10'}`
+  // Adicionar parâmetros de conexão
+  const separator = finalDatabaseUrl.includes('?') ? '&' : '?'
+  
+  // Em serverless, adicionar ID único para forçar nova conexão
+  if (isServerless) {
+    const uniqueId = `${Date.now()}-${Math.random().toString(36).substring(7)}`
+    finalDatabaseUrl += `${separator}application_name=req-${uniqueId}&connection_limit=1&pool_timeout=5`
   } else {
-    if (!finalDatabaseUrl.includes('connection_limit=')) {
-      finalDatabaseUrl += `&connection_limit=${isServerless ? '1' : '5'}`
-    }
-    if (!finalDatabaseUrl.includes('pool_timeout=')) {
-      finalDatabaseUrl += `&pool_timeout=${isServerless ? '5' : '10'}`
-    }
+    finalDatabaseUrl += `${separator}connection_limit=5&pool_timeout=10`
   }
   
   return new PrismaClient({
@@ -83,7 +84,7 @@ function _createPrismaClient(): PrismaClient {
 const isServerless = process.env.VERCEL || process.env.AWS_LAMBDA_FUNCTION_NAME
 
 // Função EXPORTADA para obter Prisma Client
-// Em serverless, sempre retorna uma NOVA instância
+// Em serverless, sempre retorna uma NOVA instância e DESCONECTA após uso
 // Em desenvolvimento, retorna singleton
 export function getPrismaClient(): PrismaClient {
   if (isServerless) {
@@ -98,6 +99,38 @@ export function getPrismaClient(): PrismaClient {
   }
   
   return globalForPrisma.prisma
+}
+
+// Função helper para executar operações Prisma com desconexão automática em serverless
+export async function withPrisma<T>(
+  operation: (client: PrismaClient) => Promise<T>
+): Promise<T> {
+  const client = getPrismaClient()
+  
+  try {
+    const result = await operation(client)
+    
+    // Em serverless, desconectar após cada operação para liberar conexão
+    if (isServerless) {
+      try {
+        await client.$disconnect()
+      } catch (error) {
+        // Ignorar erros ao desconectar
+      }
+    }
+    
+    return result
+  } catch (error) {
+    // Em caso de erro, também desconectar
+    if (isServerless) {
+      try {
+        await client.$disconnect()
+      } catch {
+        // Ignorar erros ao desconectar
+      }
+    }
+    throw error
+  }
 }
 
 // Exportar instância (será nova em serverless, singleton em dev)
