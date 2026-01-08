@@ -6,7 +6,12 @@ const globalForPrisma = globalThis as unknown as {
 
 // Função interna para criar Prisma Client (função privada)
 function _createPrismaClient(): PrismaClient {
-  const databaseUrl = process.env.DATABASE_URL || process.env.POSTGRES_URL || process.env.POSTGRES_DATABASE
+  // Remover aspas se houver (alguns arquivos .env podem ter aspas)
+  const databaseUrl = (
+    process.env.DATABASE_URL || 
+    process.env.POSTGRES_URL || 
+    process.env.POSTGRES_DATABASE
+  )?.trim()?.replace(/^["']|["']$/g, '') // Remove aspas simples ou duplas no início/fim
 
   if (!databaseUrl) {
     const availableDbVars = Object.keys(process.env).filter(k => 

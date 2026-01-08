@@ -6,13 +6,19 @@ const getTransporter = () => {
     throw new Error('Configurações de SMTP não encontradas. Verifique as variáveis SMTP_USER e SMTP_PASS no .env')
   }
 
+  // Remover aspas se houver (alguns arquivos .env podem ter aspas)
+  const smtpHost = (process.env.SMTP_HOST || 'smtp.gmail.com')?.trim()?.replace(/^["']|["']$/g, '')
+  const smtpPort = parseInt((process.env.SMTP_PORT || '587')?.trim()?.replace(/^["']|["']$/g, '') || '587')
+  const smtpUser = process.env.SMTP_USER?.trim()?.replace(/^["']|["']$/g, '') || ''
+  const smtpPass = process.env.SMTP_PASS?.trim()?.replace(/^["']|["']$/g, '') || ''
+
   return nodemailer.createTransport({
-    host: process.env.SMTP_HOST || 'smtp.gmail.com',
-    port: parseInt(process.env.SMTP_PORT || '587'),
+    host: smtpHost,
+    port: smtpPort,
     secure: false, // true para 465, false para outras portas
     auth: {
-      user: process.env.SMTP_USER,
-      pass: process.env.SMTP_PASS,
+      user: smtpUser,
+      pass: smtpPass,
     },
   })
 }
@@ -23,11 +29,17 @@ export async function sendResetPasswordEmail(email: string, resetToken: string):
     throw new Error('Email inválido fornecido')
   }
 
-  const resetUrl = `${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}/reset-password?token=${resetToken}`
+  // Remover aspas se houver (alguns arquivos .env podem ter aspas)
+  const siteUrl = (process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000')
+    ?.trim()?.replace(/^["']|["']$/g, '') // Remove aspas simples ou duplas no início/fim
+  const resetUrl = `${siteUrl}/reset-password?token=${resetToken}`
+  
   const transporter = getTransporter()
+  // Obter SMTP_USER novamente para usar no from
+  const smtpUser = process.env.SMTP_USER?.trim()?.replace(/^["']|["']$/g, '') || ''
   
   const mailOptions = {
-    from: `"TraduzSum" <${process.env.SMTP_USER}>`,
+    from: `"TraduzSum" <${smtpUser}>`,
     to: email, // Email pessoal do usuário que solicitou a recuperação
     subject: 'Recuperação de Senha - TraduzSum',
     html: `

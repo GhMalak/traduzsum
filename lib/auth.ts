@@ -3,7 +3,9 @@ import jwt from 'jsonwebtoken'
 import { PrismaClient } from '@prisma/client'
 import { withPrisma } from './db'
 
-const JWT_SECRET = process.env.JWT_SECRET || 'seu-secret-super-seguro-mude-em-producao'
+// Remover aspas se houver (alguns arquivos .env podem ter aspas)
+const JWT_SECRET = (process.env.JWT_SECRET || 'seu-secret-super-seguro-mude-em-producao')
+  ?.trim()?.replace(/^["']|["']$/g, '') // Remove aspas simples ou duplas no início/fim
 
 // Interface para compatibilidade
 export interface User {
