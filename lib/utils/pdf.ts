@@ -140,23 +140,29 @@ export function generatePDF({ title, translatedText, fileName = 'traducao', user
     )
     
     if (isTitle) {
-      // Título em AZUL e negrito
+      // Título em AZUL e negrito - FORÇAR cor azul
       doc.setFontSize(11)
       doc.setFont('helvetica', 'bold')
-      doc.setTextColor(accentColor[0], accentColor[1], accentColor[2])
+      // Usar azul (RGB: 59, 130, 246) - blue-500
+      doc.setTextColor(59, 130, 246)
       
       const titleLines = doc.splitTextToSize(cleanLine, maxWidth)
       titleLines.forEach((titleLine: string) => {
         if (yPosition > pageHeight - footerSpace) {
           doc.addPage()
           yPosition = margin
+          // Garantir cor azul ao criar nova página
+          doc.setTextColor(59, 130, 246)
         }
+        // FORÇAR cor azul em cada linha do título
+        doc.setTextColor(59, 130, 246)
+        doc.setFont('helvetica', 'bold')
         doc.text(titleLine, margin, yPosition)
         yPosition += lineHeight
       })
       
       yPosition += titleSpacing
-      // Resetar para texto normal
+      // Resetar para texto normal (preto)
       doc.setFontSize(10)
       doc.setFont('helvetica', 'normal')
       doc.setTextColor(0, 0, 0)
