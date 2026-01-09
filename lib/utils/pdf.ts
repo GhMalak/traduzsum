@@ -96,29 +96,89 @@ export function generatePDF({ title, translatedText, fileName = 'traducao', user
   })
   yPosition += 8
 
-  // Texto traduzido - renderização simples
+  // Texto traduzido - renderização com títulos em azul
   if (yPosition > pageHeight - footerSpace) {
     doc.addPage()
     yPosition = margin
-    
   }
 
-  doc.setTextColor(0, 0, 0)
+  // Processar texto linha por linha para identificar títulos
+  const lines = translatedText.split('\n')
+  const lineHeight = 5
+  const titleSpacing = 2
+  
   doc.setFontSize(10)
   doc.setFont('helvetica', 'normal')
+  doc.setTextColor(0, 0, 0)
   
-  // Remover marcadores markdown simples
-  const cleanText = translatedText.replace(/\*\*/g, '')
-  const textLines = doc.splitTextToSize(cleanText, maxWidth)
-  
-  textLines.forEach((line: string) => {
+  for (const line of lines) {
     if (yPosition > pageHeight - footerSpace) {
       doc.addPage()
       yPosition = margin
     }
-    doc.text(line, margin, yPosition)
-    yPosition += 5
-  })
+    
+    const trimmed = line.trim()
+    
+    // Pular linhas vazias
+    if (!trimmed) {
+      yPosition += lineHeight / 2
+      continue
+    }
+    
+    // Remover marcadores markdown, mas preservar estrutura
+    let cleanLine = trimmed.replace(/\*\*/g, '').trim()
+    
+    // Identificar se é um título:
+    // - Texto em maiúsculas seguido de dois pontos (ex: "DEFINIÇÃO:", "CONTEÚDO:", "EXCEÇÕES:")
+    // - Palavras curtas (até 30 caracteres) em maiúsculas terminando com :
+    // - Também verificar se originalmente estava em negrito markdown
+    const wasBoldInMarkdown = trimmed.startsWith('**') && trimmed.endsWith('**')
+    const isTitle = (
+      cleanLine.match(/^[A-ZÁÊÔÇ][A-ZÁÊÔÇ\s]+:$/) !== null || // TUDO MAIÚSCULO seguido de :
+      (cleanLine.length <= 30 && cleanLine.endsWith(':') && /^[A-ZÁÊÔÇ]/.test(cleanLine)) || // Título curto em maiúscula terminando com :
+      (wasBoldInMarkdown && cleanLine.endsWith(':')) // Estava em negrito e termina com :
+    )
+    
+    if (isTitle) {
+      // Título em AZUL e negrito
+      doc.setFontSize(11)
+      doc.setFont('helvetica', 'bold')
+      doc.setTextColor(accentColor[0], accentColor[1], accentColor[2])
+      
+      const titleLines = doc.splitTextToSize(cleanLine, maxWidth)
+      titleLines.forEach((titleLine: string) => {
+        if (yPosition > pageHeight - footerSpace) {
+          doc.addPage()
+          yPosition = margin
+        }
+        doc.text(titleLine, margin, yPosition)
+        yPosition += lineHeight
+      })
+      
+      yPosition += titleSpacing
+      // Resetar para texto normal
+      doc.setFontSize(10)
+      doc.setFont('helvetica', 'normal')
+      doc.setTextColor(0, 0, 0)
+    } else {
+      // Texto normal em PRETO
+      doc.setFontSize(10)
+      doc.setFont('helvetica', 'normal')
+      doc.setTextColor(0, 0, 0)
+      
+      const textLines = doc.splitTextToSize(cleanLine, maxWidth)
+      textLines.forEach((textLine: string) => {
+        if (yPosition > pageHeight - footerSpace) {
+          doc.addPage()
+          yPosition = margin
+        }
+        doc.text(textLine, margin, yPosition)
+        yPosition += lineHeight
+      })
+      
+      yPosition += 2
+    }
+  }
 
   // Rodapé em todas as páginas (compacto)
   const totalPages = doc.getNumberOfPages()
