@@ -33,9 +33,23 @@ const getTransporter = () => {
     transporterConfig.tls = {
       rejectUnauthorized: false // Aceitar certificados auto-assinados se necessário
     }
+    // Configurações adicionais para melhor compatibilidade
+    transporterConfig.connectionTimeout = 10000 // 10 segundos
+    transporterConfig.greetingTimeout = 10000
   }
 
-  return nodemailer.createTransport(transporterConfig)
+  const transporter = nodemailer.createTransport(transporterConfig)
+  
+  // Verificar conexão (opcional, mas ajuda a identificar problemas cedo)
+  try {
+    await transporter.verify()
+    console.log('✅ Servidor SMTP verificado com sucesso')
+  } catch (verifyError: any) {
+    console.error('⚠️ Erro ao verificar servidor SMTP:', verifyError.message)
+    // Continuar mesmo assim - pode funcionar na hora de enviar
+  }
+  
+  return transporter
 }
 
 export async function sendResetPasswordEmail(email: string, resetToken: string): Promise<void> {
@@ -46,9 +60,14 @@ export async function sendResetPasswordEmail(email: string, resetToken: string):
 
   // Remover aspas se houver (alguns arquivos .env podem ter aspas)
   // Tentar NEXT_PUBLIC_SITE_URL primeiro, depois NEXT_PUBLIC_BASE_URL, depois localhost
-  const siteUrl = (process.env.NEXT_PUBLIC_SITE_URL || process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000')
+  let siteUrl = (process.env.NEXT_PUBLIC_SITE_URL || process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000')
     ?.trim()?.replace(/^["']|["']$/g, '') // Remove aspas simples ou duplas no início/fim
     ?.replace(/\/$/, '') // Remove barra final se houver
+  
+  // Se não começar com http, adicionar https
+  if (siteUrl && !siteUrl.startsWith('http://') && !siteUrl.startsWith('https://')) {
+    siteUrl = `https://${siteUrl}`
+  }
   
   if (!siteUrl) {
     throw new Error('URL do site não configurada. Configure NEXT_PUBLIC_SITE_URL ou NEXT_PUBLIC_BASE_URL')
@@ -56,7 +75,14 @@ export async function sendResetPasswordEmail(email: string, resetToken: string):
   
   const resetUrl = `${siteUrl}/reset-password?token=${resetToken}`
   
-  const transporter = getTransporter()
+  let transporter
+  try {
+    transporter = await getTransporter()
+  } catch (transporterError: any) {
+    console.error('❌ Erro ao criar transporter SMTP:', transporterError)
+    throw new Error(`Erro na configuração SMTP: ${transporterError.message}`)
+  }
+  
   // Obter SMTP_USER novamente para usar no from
   const smtpUser = process.env.SMTP_USER?.trim()?.replace(/^["']|["']$/g, '') || ''
   
