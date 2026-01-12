@@ -30,8 +30,15 @@ export async function sendResetPasswordEmail(email: string, resetToken: string):
   }
 
   // Remover aspas se houver (alguns arquivos .env podem ter aspas)
-  const siteUrl = (process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000')
+  // Tentar NEXT_PUBLIC_SITE_URL primeiro, depois NEXT_PUBLIC_BASE_URL, depois localhost
+  const siteUrl = (process.env.NEXT_PUBLIC_SITE_URL || process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000')
     ?.trim()?.replace(/^["']|["']$/g, '') // Remove aspas simples ou duplas no início/fim
+    ?.replace(/\/$/, '') // Remove barra final se houver
+  
+  if (!siteUrl) {
+    throw new Error('URL do site não configurada. Configure NEXT_PUBLIC_SITE_URL ou NEXT_PUBLIC_BASE_URL')
+  }
+  
   const resetUrl = `${siteUrl}/reset-password?token=${resetToken}`
   
   const transporter = getTransporter()

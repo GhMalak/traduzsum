@@ -158,46 +158,79 @@ export async function validateLogin(email: string, password: string): Promise<Us
 }
 
 export async function saveResetToken(email: string, token: string): Promise<void> {
-  await withPrisma(async (prisma: PrismaClient) => {
-    // Remove tokens expirados
-    const now = new Date()
-    await prisma.resetToken.deleteMany({
-      where: {
-        expiresAt: {
-          lt: now
+  if (!email || !token) {
+    throw new Error('Email e token são obrigatórios')
+  }
+
+  return await withPrisma(async (prisma: PrismaClient) => {
+    try {
+      // Remove tokens expirados
+      const now = new Date()
+      await prisma.resetToken.deleteMany({
+        where: {
+          expiresAt: {
+            lt: now
+          }
         }
-      }
-    })
-    
-    // Adiciona novo token (válido por 1 hora)
-    await prisma.resetToken.create({
-      data: {
-        token,
-        email: email.toLowerCase(),
-        expiresAt: new Date(now.getTime() + 60 * 60 * 1000) // 1 hora
-      }
-    })
+      })
+      
+      // Remove tokens antigos do mesmo email (limpar tokens anteriores)
+      await prisma.resetToken.deleteMany({
+        where: {
+          email: email.toLowerCase()
+        }
+      })
+      
+      // Adiciona novo token (válido por 1 hora)
+      await prisma.resetToken.create({
+        data: {
+          token,
+          email: email.toLowerCase(),
+          expiresAt: new Date(now.getTime() + 60 * 60 * 1000) // 1 hora
+        }
+      })
+      
+      console.log(`✅ Token de reset salvo para ${email.toLowerCase()}`)
+    } catch (error: any) {
+      console.error('❌ Erro ao salvar token de reset:', error)
+      throw new Error(`Erro ao salvar token de recuperação: ${error.message}`)
+    }
   })
 }
 
 export async function validateResetToken(token: string): Promise<string | null> {
-  return await withPrisma(async (prisma: PrismaClient) => {
-    const resetToken = await prisma.resetToken.findUnique({
-      where: { token }
-    })
+  if (!token || typeof token !== 'string' || token.trim().length === 0) {
+    return null
+  }
 
-    if (!resetToken) return null
-
-    if (resetToken.expiresAt < new Date()) {
-      // Remove token expirado
-      await prisma.resetToken.delete({
-        where: { token }
+  try {
+    return await withPrisma(async (prisma: PrismaClient) => {
+      const resetToken = await prisma.resetToken.findUnique({
+        where: { token: token.trim() }
       })
-      return null
-    }
 
-    return resetToken.email
-  })
+      if (!resetToken) {
+        console.log('❌ Token não encontrado no banco de dados')
+        return null
+      }
+
+      const now = new Date()
+      if (resetToken.expiresAt < now) {
+        // Remove token expirado
+        await prisma.resetToken.delete({
+          where: { token }
+        })
+        console.log('❌ Token expirado')
+        return null
+      }
+
+      console.log(`✅ Token válido para ${resetToken.email}`)
+      return resetToken.email
+    })
+  } catch (error: any) {
+    console.error('❌ Erro ao validar token:', error)
+    return null
+  }
 }
 
 export async function deleteResetToken(token: string): Promise<void> {
