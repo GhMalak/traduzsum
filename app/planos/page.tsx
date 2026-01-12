@@ -269,8 +269,8 @@ export default function PlanosPage() {
 
               <ul className="space-y-3 mb-8">
                 {plan.features.map((feature, featureIndex) => {
-                  // "Sem limites diários" é uma feature positiva, não negativa
-                  const isNegative = feature.includes('❌') || (feature.includes('Sem') && !feature.includes('Sem limites diários'))
+                  // "Sem limites diários" e "Sem validade" são features positivas, não negativas
+                  const isNegative = feature.includes('❌') || (feature.includes('Sem') && !feature.includes('Sem limites diários') && !feature.includes('Sem validade'))
                   return (
                     <li key={featureIndex} className={`flex items-start p-2 rounded-lg transition-colors ${
                       isNegative ? 'bg-gray-50' : 'hover:bg-blue-50'
