@@ -14,7 +14,7 @@ export function generatePDF({ title, translatedText, fileName = 'traducao', user
   const pageHeight = doc.internal.pageSize.getHeight()
   const margin = 20
   const maxWidth = pageWidth - 2 * margin
-  const footerSpace = 50
+  const footerSpace = 30 // Reduzido para dar mais espaço ao conteúdo
   let yPosition = margin
 
   // Paleta de cores profissional
@@ -218,105 +218,65 @@ export function generatePDF({ title, translatedText, fileName = 'traducao', user
     }
   }
 
-  // Rodapé profissional e completo em todas as páginas
+  // Rodapé compacto e elegante em todas as páginas
   const totalPages = doc.getNumberOfPages()
-  const footerTop = pageHeight - 55
-  const footerHeight = 55
+  const footerTop = pageHeight - 25 // Reduzido de 55 para 25
+  const footerHeight = 25
   
   for (let i = 1; i <= totalPages; i++) {
     doc.setPage(i)
     
-    // Fundo do rodapé elegante
-    doc.setFillColor(250, 251, 252)
-    doc.rect(0, footerTop, pageWidth, footerHeight, 'F')
-    
-    // Barra superior colorida do rodapé
+    // Barra superior colorida do rodapé (mais fina)
     doc.setFillColor(primaryColor[0], primaryColor[1], primaryColor[2])
-    doc.rect(0, footerTop, pageWidth, 4, 'F')
+    doc.rect(0, footerTop, pageWidth, 2, 'F')
     
     // Linha divisória sutil
-    doc.setDrawColor(primaryLight[0], primaryLight[1], primaryLight[2])
+    doc.setDrawColor(lightGray[0], lightGray[1], lightGray[2])
     doc.setLineWidth(0.3)
-    doc.line(0, footerTop, pageWidth, footerTop)
+    doc.line(margin, footerTop, pageWidth - margin, footerTop)
     
-    // Lado esquerdo do rodapé - Informações da empresa
-    let leftY = footerTop + 12
+    // Lado esquerdo do rodapé - Logo e site
+    let leftY = footerTop + 6
     
-    // Logo/Título no rodapé (maior e mais destacado)
     doc.setTextColor(primaryColor[0], primaryColor[1], primaryColor[2])
-    doc.setFontSize(11)
+    doc.setFontSize(8)
     doc.setFont('helvetica', 'bold')
     doc.text('TraduzSum', margin, leftY)
-    leftY += 7
     
-    // Tagline profissional
     doc.setTextColor(darkGray[0], darkGray[1], darkGray[2])
-    doc.setFontSize(8)
-    doc.setFont('helvetica', 'italic')
-    doc.text('Simplificando o direito para todos', margin, leftY)
-    leftY += 9
+    doc.setFontSize(6)
+    doc.setFont('helvetica', 'normal')
+    doc.text('traduzsum.com.br', margin + 35, leftY)
     
-    // Informações do cliente (se disponível)
+    // Informações do cliente (se disponível, compacto)
     if (userName && userCPF) {
-      doc.setTextColor(0, 0, 0)
-      doc.setFontSize(7)
-      doc.setFont('helvetica', 'normal')
-      doc.text(`Cliente: ${userName}`, margin, leftY)
-      leftY += 5
-      doc.text(`CPF: ${userCPF}`, margin, leftY)
-      leftY += 5
+      doc.setTextColor(100, 100, 100)
+      doc.setFontSize(5.5)
+      doc.text(`${userName} | CPF: ${userCPF}`, margin, leftY + 4, { maxWidth: pageWidth / 2 - margin })
     }
     
-    // Informações de contato
-    doc.setTextColor(primaryColor[0], primaryColor[1], primaryColor[2])
-    doc.setFontSize(7)
-    doc.setFont('helvetica', 'bold')
-    doc.text('traduzsum.com.br', margin, leftY)
+    // Lado direito do rodapé - Data e página
+    let rightY = footerTop + 6
     
-    // Lado direito do rodapé - Informações legais e técnicas
-    let rightY = footerTop + 12
-    
-    // Aviso legal
-    doc.setTextColor(darkGray[0], darkGray[1], darkGray[2])
-    doc.setFontSize(6.5)
-    doc.setFont('helvetica', 'normal')
-    doc.text('Documento gerado automaticamente', pageWidth - margin, rightY, { align: 'right' })
-    rightY += 5
-    doc.text('Tradução simplificada para fins didáticos', pageWidth - margin, rightY, { align: 'right' })
-    rightY += 5
-    doc.text('Consulte sempre o texto original oficial', pageWidth - margin, rightY, { align: 'right' })
-    rightY += 8
-    
-    // Data de geração
     const now = new Date()
     const genDate = now.toLocaleDateString('pt-BR', { 
       day: '2-digit', 
       month: '2-digit', 
-      year: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
+      year: 'numeric'
     })
-    doc.setTextColor(100, 100, 100)
+    
+    doc.setTextColor(darkGray[0], darkGray[1], darkGray[2])
     doc.setFontSize(6)
+    doc.setFont('helvetica', 'normal')
     doc.text(`Gerado em: ${genDate}`, pageWidth - margin, rightY, { align: 'right' })
-    rightY += 5
     
-    // Número do documento (se disponível)
-    const docNumber = `DOC-${Date.now().toString().slice(-8)}`
-    doc.text(`ID: ${docNumber}`, pageWidth - margin, rightY, { align: 'right' })
-    
-    // Número da página (centralizado na parte inferior, mais destacado)
+    // Número da página (centralizado na parte inferior)
     doc.setTextColor(primaryColor[0], primaryColor[1], primaryColor[2])
-    doc.setFontSize(9)
+    doc.setFontSize(8)
     doc.setFont('helvetica', 'bold')
     const pageText = `${i} / ${totalPages}`
     const pageTextWidth = doc.getTextWidth(pageText)
-    doc.text(pageText, (pageWidth - pageTextWidth) / 2, pageHeight - 6)
-    
-    // Linha decorativa inferior
-    doc.setDrawColor(primaryLight[0], primaryLight[1], primaryLight[2])
-    doc.setLineWidth(0.5)
-    doc.line(margin, pageHeight - 2, pageWidth - margin, pageHeight - 2)
+    doc.text(pageText, (pageWidth - pageTextWidth) / 2, pageHeight - 4)
   }
 
   // Salvar PDF

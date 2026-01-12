@@ -644,21 +644,24 @@ Siga rigorosamente TODAS as instruções do sistema. Use o processo estruturado 
 - Mantenha todos os dados, números, datas e referências exatamente como estão
 
 **FORMATAÇÃO PARA PDF (IMPORTANTE):**
-- Organize o texto em TÓPICOS PRINCIPAIS claros
-- Use estrutura hierárquica:
-  * **TÓPICOS PRINCIPAIS** (títulos): formate com **NEGRITO** e termine com dois pontos (:)
-  * **RESTO DO TEXTO**: formate também com **NEGRITO** para facilitar a leitura
+- Crie um texto fluido e natural, organizado em parágrafos bem estruturados
+- Use subtítulos em **NEGRITO** apenas quando necessário para organizar seções principais
+- O texto principal deve ser em formato normal (sem negrito), escrito de forma clara e acessível
 - Seja CONCISO: crie um resumo facilitador, não uma transcrição completa
-- Destaque os pontos mais importantes de forma clara
-- Use quebras de linha para separar tópicos
+- Destaque os pontos mais importantes de forma natural, sem exagerar em formatação
+- Use parágrafos separados por linha em branco para melhor legibilidade
 - Formate assim:
-  **TÓPICO PRINCIPAL:** Texto explicativo em negrito que explica o tópico.
+  **Título da Seção (se necessário)**
   
-  **OUTRO TÓPICO:** Outro texto explicativo em negrito.
+  Texto explicativo em formato normal, claro e acessível. Explique o conceito de forma natural, como se estivesse conversando com alguém que não conhece direito.
   
-- Se houver exceções ou condições, destaque-as claramente: **ATENÇÃO:** ou **EXCEÇÃO:**
-- Mantenha o texto compacto mas completo
-- **IMPORTANTE:** TODOS os tópicos devem terminar com dois pontos (:) e o texto explicativo deve vir logo após, também em negrito
+  **Outra Seção (se necessário)**
+  
+  Continue explicando de forma fluida e natural.
+  
+- Se houver exceções ou condições importantes, destaque-as com: **ATENÇÃO:** ou **IMPORTANTE:** seguido do texto em formato normal
+- Mantenha o texto compacto mas completo, priorizando clareza sobre formatação excessiva
+- **IMPORTANTE:** Evite criar muitos tópicos curtos. Prefira parágrafos bem desenvolvidos que expliquem o conteúdo de forma completa
 
 **TEXTO ORIGINAL:**
 
@@ -669,31 +672,40 @@ ${text}
 ---
 
 **INSTRUÇÕES PARA A TRADUÇÃO:**
-- Crie um RESUMO FACILITADOR, não uma tradução palavra por palavra
-- Organize em TÓPICOS PRINCIPAIS com explicações claras
-- Use formatação com **NEGRITO** para TUDO:
-  * Títulos/tópicos principais: **TÍTULO:** (terminando com dois pontos)
-  * Texto explicativo: também em **NEGRITO** para facilitar leitura
-- Exemplo de formatação:
-  **DECISÃO:** O juiz decidiu que o réu deve pagar indenização.
+- Crie um RESUMO FACILITADOR em linguagem natural e fluida
+- Organize o conteúdo em parágrafos bem estruturados, não em tópicos curtos
+- Use **NEGRITO** APENAS para subtítulos de seções principais (quando realmente necessário)
+- O texto principal deve ser escrito em formato normal, de forma clara e natural
+- Escreva como se estivesse explicando para um amigo que não conhece direito
+- Exemplo de formatação adequada:
   
-  **REGRAS:** São aplicadas as seguintes regras.
+  **O que foi decidido:**
   
-  **EXCEÇÕES:** Atenção para as exceções.
-- Seja conciso mas completo - foque nos pontos essenciais
-- Destaque claramente TODAS as exceções e condições
-- Use linguagem acessível mas precisa
+  O juiz determinou que o réu precisa pagar uma indenização pelos danos causados. Essa decisão foi baseada nas provas apresentadas durante o processo.
+  
+  **Regras aplicáveis:**
+  
+  Para chegar a essa conclusão, o juiz aplicou as seguintes regras do Código Civil. Primeiro, verificou se houve dano. Depois, analisou se o dano foi causado pela ação do réu. Por fim, confirmou que existe uma relação entre a ação e o prejuízo sofrido.
+  
+  **Exceções importantes:**
+  
+  É importante saber que essa regra não se aplica em alguns casos específicos. Por exemplo, quando o dano foi causado por força maior ou quando a vítima também contribuiu para o problema.
+  
+- Seja conciso mas completo - desenvolva os conceitos de forma natural
+- Destaque claramente TODAS as exceções e condições, mas de forma integrada ao texto
+- Use linguagem acessível mas precisa, evitando jargão jurídico desnecessário
+- Prefira parágrafos desenvolvidos a listas de tópicos curtos
 
 **FORMATO DA RESPOSTA:**
 
 - Responda APENAS com o conteúdo traduzido formatado, sem introduções ou comentários meta
 - Comece diretamente com a tradução formatada
-- Use formatação com **NEGRITO** para TUDO:
-  * Títulos/tópicos principais: **TÍTULO:** (em negrito, terminando com dois pontos)
-  * Todo o texto explicativo: também em **NEGRITO** para facilitar leitura
-- Seja conciso mas completo - foque nos pontos essenciais
-- Destaque claramente TODAS as exceções e condições
-- Use linguagem acessível mas precisa`,
+- Use **NEGRITO** APENAS para subtítulos de seções principais (não para todo o texto)
+- O texto principal deve estar em formato normal, escrito de forma natural e fluida
+- Organize em parágrafos bem desenvolvidos, não em tópicos curtos
+- Seja conciso mas completo - desenvolva as ideias de forma natural
+- Destaque claramente TODAS as exceções e condições de forma integrada
+- Use linguagem acessível mas precisa, como se estivesse explicando para alguém leigo`,
         },
       ],
       temperature: 0.0, // Reduzido para maior consistência e precisão
