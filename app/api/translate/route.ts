@@ -273,17 +273,22 @@ export async function POST(request: NextRequest) {
     // Buscar traduções similares para usar como contexto (RAG)
     let similarExamples = ''
     try {
-      const similarTranslations = await withPrisma(async (prisma: PrismaClient) => {
-        return await findSimilarTranslations(prisma, text, 3)
-      })
-      
-      if (similarTranslations.length > 0) {
-        similarExamples = formatSimilarExamples(similarTranslations)
-        console.log(`📚 Encontradas ${similarTranslations.length} traduções similares para usar como contexto`)
+      if (text && text.trim().length >= 50) {
+        const similarTranslations = await withPrisma(async (prisma: PrismaClient) => {
+          return await findSimilarTranslations(prisma, text, 3)
+        })
+        
+        if (similarTranslations && similarTranslations.length > 0) {
+          similarExamples = formatSimilarExamples(similarTranslations)
+          if (similarExamples) {
+            console.log(`✅ RAG: ${similarTranslations.length} traduções similares encontradas e formatadas`)
+          }
+        }
       }
-    } catch (memoryError) {
-      console.error('Erro ao buscar traduções similares:', memoryError)
-      // Continuar mesmo se falhar a busca de memória
+    } catch (memoryError: any) {
+      console.error('⚠️ Erro no sistema RAG (continuando sem contexto):', memoryError?.message || memoryError)
+      // Continuar mesmo se falhar a busca de memória - não é crítico
+      similarExamples = ''
     }
 
     // Usa llama-3.1-8b-instant - modelo rápido, barato e eficiente para tradução jurídica
