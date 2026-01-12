@@ -30,8 +30,9 @@ export async function POST(request: NextRequest) {
     const userId = decoded.userId
 
     // Buscar informações do usuário e validar limites
+    type LimitError = { error: string; status: number }
     let user: { plan: string; credits: number | null } | null = null
-    let limitError: { error: string; status: number } | null = null
+    let limitError: LimitError | null = null
 
     try {
       await withPrisma(async (prisma: PrismaClient) => {
@@ -87,7 +88,7 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    if (limitError !== null) {
+    if (limitError) {
       return NextResponse.json(
         { error: limitError.error },
         { status: limitError.status }
