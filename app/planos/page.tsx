@@ -124,9 +124,27 @@ export default function PlanosPage() {
       ],
       buttonText: 'Assinar agora',
       buttonStyle: 'bg-primary-600 text-white hover:bg-primary-700',
+      popular: false
+    },
+    {
+      name: 'Anual',
+      price: 'R$ 149,00',
+      period: '/ano',
+      description: 'Melhor custo-benefício',
+      features: [
+        'Traduções ilimitadas',
+        'Texto e PDF (até 30 páginas)',
+        'Download em PDF',
+        'Prioridade no processamento',
+        'Suporte prioritário',
+        'Sem limites diários',
+        'Economia de 38%'
+      ],
+      buttonText: 'Assinar agora',
+      buttonStyle: 'bg-primary-600 text-white hover:bg-primary-700',
       popular: true,
-      annualPrice: 'R$ 149,00/ano (R$ 12,40/mês)',
-      annualSavings: 'Economize 38%'
+      monthlyEquivalent: 'R$ 12,40/mês',
+      savings: 'Economize 38%'
     },
     {
       name: 'Créditos',
@@ -196,7 +214,7 @@ export default function PlanosPage() {
           </p>
         </div>
 
-        <div className="grid md:grid-cols-3 gap-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
           {plans.map((plan, index) => (
             <div
               key={index}
@@ -234,14 +252,14 @@ export default function PlanosPage() {
                       <span className="text-xl text-gray-600">{plan.period}</span>
                     )}
                   </div>
-                  {plan.annualPrice && (
+                  {plan.monthlyEquivalent && (
                     <div className="mt-3 p-3 bg-green-50 rounded-lg border border-green-200">
-                      <p className="text-sm text-gray-700 font-medium">{plan.annualPrice}</p>
+                      <p className="text-sm text-gray-700 font-medium">{plan.monthlyEquivalent}</p>
                       <p className="text-xs text-green-600 font-bold mt-1 flex items-center justify-center gap-1">
                         <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
                           <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
                         </svg>
-                        {plan.annualSavings}
+                        {plan.savings}
                       </p>
                     </div>
                   )}
