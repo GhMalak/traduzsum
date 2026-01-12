@@ -27,12 +27,15 @@ model User {
 }
 
 model Translation {
-  id        String   @id @default(cuid())
-  userId    String
-  type      String   // 'text' ou 'pdf'
-  textLength Int?    // Tamanho do texto (caracteres)
-  pages     Int?     // Número de páginas (se PDF)
-  createdAt DateTime @default(now()) @db.Timestamp(6)
+  id            String   @id @default(cuid())
+  userId        String
+  type          String   // 'text' ou 'pdf'
+  textLength    Int?     // Tamanho do texto (caracteres)
+  pages         Int?     // Número de páginas (se PDF)
+  title         String?  // Título/nome da súmula ou jurisprudência
+  originalText  String?  @db.Text // Texto original
+  translatedText String? @db.Text // Texto traduzido
+  createdAt     DateTime @default(now()) @db.Timestamp(6)
 
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 

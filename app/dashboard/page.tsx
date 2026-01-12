@@ -14,6 +14,11 @@ export default function DashboardPage() {
   const [expiresAt, setExpiresAt] = useState<string | null>(null)
   const [loadingUsage, setLoadingUsage] = useState(true)
   const [userCredits, setUserCredits] = useState(0)
+  const [cancelAtPeriodEnd, setCancelAtPeriodEnd] = useState(false)
+  const [canceling, setCanceling] = useState(false)
+  const [translations, setTranslations] = useState<any[]>([])
+  const [loadingTranslations, setLoadingTranslations] = useState(true)
+  const [downloadingAll, setDownloadingAll] = useState(false)
 
   useEffect(() => {
     if (!authLoading && !user) {
@@ -37,6 +42,9 @@ export default function DashboardPage() {
               if (data.subscriptionEnd) {
                 setExpiresAt(data.subscriptionEnd)
               }
+              if (data.cancelAtPeriodEnd !== undefined) {
+                setCancelAtPeriodEnd(data.cancelAtPeriodEnd)
+              }
             }
           })
           .catch(err => {
@@ -47,6 +55,93 @@ export default function DashboardPage() {
           })
     }
   }, [user])
+
+  // Buscar traduções do usuário
+  useEffect(() => {
+    if (user) {
+      fetch('/api/translations/list')
+        .then(res => res.json())
+        .then(data => {
+          if (data.error) {
+            console.error('Erro ao buscar traduções:', data.error)
+          } else {
+            setTranslations(data.translations || [])
+          }
+        })
+        .catch(err => {
+          console.error('Erro ao buscar traduções:', err)
+        })
+        .finally(() => {
+          setLoadingTranslations(false)
+        })
+    }
+  }, [user])
+
+  const handleDownloadAll = async () => {
+    setDownloadingAll(true)
+    try {
+      const response = await fetch('/api/translations/download-all', {
+        credentials: 'include'
+      })
+      const data = await response.json()
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Erro ao preparar download')
+      }
+
+      // Importar generatePDF dinamicamente
+      const { generatePDF } = await import('@/lib/utils/pdf')
+      
+      generatePDF({
+        title: data.title,
+        translatedText: data.translatedText,
+        fileName: data.fileName,
+        userName: data.userName,
+        userCPF: data.userCPF
+      })
+    } catch (error: any) {
+      console.error('Erro ao baixar traduções:', error)
+      alert(error.message || 'Erro ao baixar traduções. Tente novamente.')
+    } finally {
+      setDownloadingAll(false)
+    }
+  }
+
+  const handleCancelSubscription = async () => {
+    if (!confirm('Tem certeza que deseja cancelar sua assinatura? Você continuará tendo acesso até o final do período atual, mas não será mais cobrado.')) {
+      return
+    }
+
+    setCanceling(true)
+    try {
+      const response = await fetch('/api/payment/cancel-subscription', {
+        method: 'POST',
+        credentials: 'include'
+      })
+
+      const data = await response.json()
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Erro ao cancelar assinatura')
+      }
+
+      // Atualizar estado local
+      setCancelAtPeriodEnd(true)
+      alert('Assinatura cancelada com sucesso! Você continuará tendo acesso até o final do período atual.')
+      
+      // Recarregar dados de uso
+      const usageResponse = await fetch('/api/usage')
+      const usageData = await usageResponse.json()
+      if (usageData.subscriptionEnd) {
+        setExpiresAt(usageData.subscriptionEnd)
+      }
+    } catch (error: any) {
+      console.error('Erro ao cancelar assinatura:', error)
+      alert(error.message || 'Erro ao cancelar assinatura. Tente novamente.')
+    } finally {
+      setCanceling(false)
+    }
+  }
 
   if (authLoading) {
     return (
@@ -202,7 +297,9 @@ export default function DashboardPage() {
               <h2 className="text-xl font-semibold text-gray-800 mb-4">Sua Assinatura</h2>
               <div className="mb-4">
                 <p className="text-sm text-gray-600">Status</p>
-                <p className="text-lg font-semibold text-green-600">Ativa</p>
+                <p className={`text-lg font-semibold ${cancelAtPeriodEnd ? 'text-yellow-600' : 'text-green-600'}`}>
+                  {cancelAtPeriodEnd ? 'Cancelamento Agendado' : 'Ativa'}
+                </p>
               </div>
               {expiresAt && (
                 <div className="mb-4">
@@ -212,9 +309,26 @@ export default function DashboardPage() {
                   </p>
                 </div>
               )}
-              <button className="w-full py-2 px-4 border-2 border-red-300 text-red-600 rounded-lg hover:bg-red-50 transition-colors font-medium">
-                Cancelar Assinatura
-              </button>
+              {cancelAtPeriodEnd ? (
+                <div className="space-y-3">
+                  <div className="p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+                    <p className="text-sm text-yellow-800 font-medium">
+                      ⚠️ Cancelamento agendado
+                    </p>
+                    <p className="text-xs text-yellow-700 mt-1">
+                      Sua assinatura será cancelada ao final do período atual. Você continuará tendo acesso até {expiresAt ? new Date(expiresAt).toLocaleDateString('pt-BR') : 'o final do período'}.
+                    </p>
+                  </div>
+                </div>
+              ) : (
+                <button
+                  onClick={handleCancelSubscription}
+                  disabled={canceling}
+                  className="w-full py-2 px-4 border-2 border-red-300 text-red-600 rounded-lg hover:bg-red-50 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {canceling ? 'Cancelando...' : 'Cancelar Assinatura'}
+                </button>
+              )}
             </div>
           )}
 
@@ -241,6 +355,90 @@ export default function DashboardPage() {
               </div>
             )}
           </div>
+        </div>
+
+        {/* Minhas Traduções */}
+        <div className="bg-white rounded-2xl shadow-lg p-6 mb-8">
+          <div className="flex justify-between items-center mb-4">
+            <h2 className="text-xl font-semibold text-gray-800">Minhas Traduções</h2>
+            {translations.length > 0 && (
+              <button
+                onClick={handleDownloadAll}
+                disabled={downloadingAll}
+                className="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+              >
+                {downloadingAll ? (
+                  <>
+                    <svg className="animate-spin h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    Preparando...
+                  </>
+                ) : (
+                  <>
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                    </svg>
+                    Baixar Todas ({translations.length})
+                  </>
+                )}
+              </button>
+            )}
+          </div>
+          
+          {loadingTranslations ? (
+            <div className="animate-pulse space-y-3">
+              <div className="h-16 bg-gray-200 rounded"></div>
+              <div className="h-16 bg-gray-200 rounded"></div>
+            </div>
+          ) : translations.length === 0 ? (
+            <div className="text-center py-8 text-gray-500">
+              <svg className="w-12 h-12 mx-auto mb-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+              </svg>
+              <p>Você ainda não fez nenhuma tradução</p>
+              <Link href="/" className="mt-4 inline-block text-primary-600 hover:text-primary-700 font-medium">
+                Fazer primeira tradução →
+              </Link>
+            </div>
+          ) : (
+            <div className="space-y-3 max-h-96 overflow-y-auto">
+              {translations.map((translation) => (
+                <div key={translation.id} className="border border-gray-200 rounded-lg p-4 hover:bg-gray-50 transition-colors">
+                  <div className="flex justify-between items-start">
+                    <div className="flex-1">
+                      <h3 className="font-semibold text-gray-900 mb-1">
+                        {translation.title || 'Tradução Jurídica'}
+                      </h3>
+                      <div className="flex gap-4 text-sm text-gray-600">
+                        <span className="flex items-center gap-1">
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                          </svg>
+                          {new Date(translation.createdAt).toLocaleDateString('pt-BR')}
+                        </span>
+                        <span className="flex items-center gap-1">
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                          </svg>
+                          {translation.type === 'pdf' ? 'PDF' : 'Texto'}
+                        </span>
+                        {translation.pages && (
+                          <span className="flex items-center gap-1">
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+                            </svg>
+                            {translation.pages} páginas
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
 
         {/* Ações Rápidas */}

@@ -12,89 +12,121 @@ export function generatePDF({ title, translatedText, fileName = 'traducao', user
   const doc = new jsPDF()
   const pageWidth = doc.internal.pageSize.getWidth()
   const pageHeight = doc.internal.pageSize.getHeight()
-  const margin = 15
+  const margin = 20
   const maxWidth = pageWidth - 2 * margin
-  const footerSpace = 40 // Espaço reservado para o footer (reduzido)
+  const footerSpace = 50
   let yPosition = margin
 
-  // Cores do site
+  // Paleta de cores profissional
   const primaryColor: [number, number, number] = [7, 89, 133] // #075985 (primary-800)
   const primaryLight: [number, number, number] = [14, 165, 233] // #0ea5e9 (primary-500)
-  const lightGray: [number, number, number] = [229, 231, 235] // gray-200
   const accentColor: [number, number, number] = [59, 130, 246] // blue-500
+  const lightGray: [number, number, number] = [229, 231, 235] // gray-200
+  const darkGray: [number, number, number] = [75, 85, 99] // gray-600
+  const successColor: [number, number, number] = [34, 197, 94] // green-500
 
-  // Cabeçalho clean e profissional
-  const headerHeight = 35
+  // Cabeçalho profissional com identidade visual
+  const headerHeight = 50
   
-  // Fundo branco limpo
-  doc.setFillColor(255, 255, 255)
+  // Fundo do cabeçalho com gradiente sutil
+  doc.setFillColor(245, 247, 250)
   doc.rect(0, 0, pageWidth, headerHeight, 'F')
   
-  // Linha divisória sutil na parte inferior
-  doc.setDrawColor(lightGray[0], lightGray[1], lightGray[2])
-  doc.setLineWidth(0.5)
+  // Barra superior colorida
+  doc.setFillColor(primaryColor[0], primaryColor[1], primaryColor[2])
+  doc.rect(0, 0, pageWidth, 8, 'F')
+  
+  // Linha divisória elegante
+  doc.setDrawColor(primaryLight[0], primaryLight[1], primaryLight[2])
+  doc.setLineWidth(1)
   doc.line(0, headerHeight, pageWidth, headerHeight)
   
-  // Centralizar logo no header
-  yPosition = headerHeight / 2
+  // Logo e identidade visual
+  yPosition = 20
 
-  // Logo/Título da empresa (centralizado)
+  // Logo/Título da empresa (lado esquerdo, maior e mais destacado)
   doc.setTextColor(primaryColor[0], primaryColor[1], primaryColor[2])
-  doc.setFontSize(22)
+  doc.setFontSize(24)
   doc.setFont('helvetica', 'bold')
-  
-  // Calcular largura total da logo para centralizar
-  const logoText = 'TraduzSum'
-  const logoWidth = doc.getTextWidth(logoText)
-  const logoX = (pageWidth - logoWidth) / 2
   
   // Parte "Traduz"
   const traducWidth = doc.getTextWidth('Traduz')
-  doc.text('Traduz', logoX, yPosition - 2)
+  doc.text('Traduz', margin, yPosition)
   
-  // Parte "Sum" em cor diferente para destaque sutil
+  // Parte "Sum" em cor diferente para destaque
   doc.setTextColor(primaryLight[0], primaryLight[1], primaryLight[2])
-  doc.text('Sum', logoX + traducWidth + 1, yPosition - 2)
+  doc.text('Sum', margin + traducWidth + 2, yPosition)
   
-  // Subtítulo elegante (centralizado)
-  doc.setTextColor(100, 100, 100)
-  doc.setFontSize(8)
-  doc.setFont('helvetica', 'normal')
+  // Subtítulo elegante
+  doc.setTextColor(darkGray[0], darkGray[1], darkGray[2])
+  doc.setFontSize(9)
+  doc.setFont('helvetica', 'italic')
   const subtitle = 'Tradução Simplificada de Textos Jurídicos'
-  const subtitleWidth = doc.getTextWidth(subtitle)
-  const subtitleX = (pageWidth - subtitleWidth) / 2
-  doc.text(subtitle, subtitleX, yPosition + 5)
+  doc.text(subtitle, margin, yPosition + 6)
 
-  // Data e hora (lado direito, discreto)
+  // Informações do documento (lado direito)
   const now = new Date()
   const dateStr = now.toLocaleDateString('pt-BR', {
     day: '2-digit',
     month: '2-digit',
-    year: 'numeric',
+    year: 'numeric'
+  })
+  const timeStr = now.toLocaleTimeString('pt-BR', {
     hour: '2-digit',
     minute: '2-digit'
   })
-  doc.setTextColor(150, 150, 150)
-  doc.setFontSize(7)
+  
+  // Data e hora
+  doc.setTextColor(darkGray[0], darkGray[1], darkGray[2])
+  doc.setFontSize(8)
   doc.setFont('helvetica', 'normal')
-  doc.text(dateStr, pageWidth - margin, headerHeight - 5, { align: 'right' })
-
-  yPosition = headerHeight + 12
-
-  // Título do documento (compacto)
-  doc.setTextColor(0, 0, 0)
-  doc.setFontSize(14)
+  doc.text(`Gerado em: ${dateStr} às ${timeStr}`, pageWidth - margin, yPosition - 2, { align: 'right' })
+  
+  // Número do documento
+  const docNumber = `DOC-${Date.now().toString().slice(-8)}`
+  doc.setFontSize(7)
+  doc.setTextColor(120, 120, 120)
+  doc.text(`Documento: ${docNumber}`, pageWidth - margin, yPosition + 4, { align: 'right' })
+  
+  // Site
+  doc.setTextColor(primaryColor[0], primaryColor[1], primaryColor[2])
+  doc.setFontSize(7)
   doc.setFont('helvetica', 'bold')
-  const titleLines = doc.splitTextToSize(title, maxWidth)
-  titleLines.forEach((line: string) => {
+  doc.text('traduzsum.com.br', pageWidth - margin, yPosition + 8, { align: 'right' })
+
+  yPosition = headerHeight + 15
+
+  // Título do documento com destaque
+  // Caixa de destaque para o título
+  const titleBoxHeight = 12
+  const titleStartY = yPosition
+  
+  // Fundo sutil para o título
+  doc.setFillColor(240, 245, 250)
+  doc.rect(margin - 2, titleStartY - 8, maxWidth + 4, titleBoxHeight, 'F')
+  
+  // Borda esquerda colorida
+  doc.setFillColor(primaryColor[0], primaryColor[1], primaryColor[2])
+  doc.rect(margin - 2, titleStartY - 8, 3, titleBoxHeight, 'F')
+  
+  // Linha inferior sutil
+  doc.setDrawColor(primaryLight[0], primaryLight[1], primaryLight[2])
+  doc.setLineWidth(0.5)
+  doc.line(margin - 2, titleStartY + titleBoxHeight - 8, pageWidth - margin + 2, titleStartY + titleBoxHeight - 8)
+  
+  doc.setTextColor(primaryColor[0], primaryColor[1], primaryColor[2])
+  doc.setFontSize(16)
+  doc.setFont('helvetica', 'bold')
+  const titleLines = doc.splitTextToSize(title, maxWidth - 5)
+  titleLines.forEach((line: string, index: number) => {
     if (yPosition > pageHeight - footerSpace) {
       doc.addPage()
       yPosition = margin
     }
-    doc.text(line, margin, yPosition)
+    doc.text(line, margin + 5, yPosition - (titleLines.length - 1) * 6)
     yPosition += 6
   })
-  yPosition += 8
+  yPosition += 12
 
   // Texto traduzido - renderização com títulos em azul
   if (yPosition > pageHeight - footerSpace) {
@@ -186,57 +218,82 @@ export function generatePDF({ title, translatedText, fileName = 'traducao', user
     }
   }
 
-  // Rodapé em todas as páginas (compacto)
+  // Rodapé profissional em todas as páginas
   const totalPages = doc.getNumberOfPages()
-  const footerTop = pageHeight - 35
-  const footerHeight = 35
+  const footerTop = pageHeight - 50
+  const footerHeight = 50
   
   for (let i = 1; i <= totalPages; i++) {
     doc.setPage(i)
     
-    // Fundo do rodapé
-    doc.setFillColor(245, 247, 250)
+    // Fundo do rodapé com gradiente
+    doc.setFillColor(248, 250, 252)
     doc.rect(0, footerTop, pageWidth, footerHeight, 'F')
     
-    // Linha superior do rodapé
+    // Barra superior do rodapé
+    doc.setFillColor(primaryColor[0], primaryColor[1], primaryColor[2])
+    doc.rect(0, footerTop, pageWidth, 3, 'F')
+    
+    // Linha divisória
     doc.setDrawColor(lightGray[0], lightGray[1], lightGray[2])
+    doc.setLineWidth(0.5)
     doc.line(0, footerTop, pageWidth, footerTop)
     
-    // Lado esquerdo do rodapé (compacto)
-    let leftY = footerTop + 8
+    // Lado esquerdo do rodapé
+    let leftY = footerTop + 10
     
     // Logo/Título no rodapé
     doc.setTextColor(primaryColor[0], primaryColor[1], primaryColor[2])
-    doc.setFontSize(9)
+    doc.setFontSize(10)
     doc.setFont('helvetica', 'bold')
     doc.text('TraduzSum', margin, leftY)
-    leftY += 5
+    leftY += 6
     
-    // Informações do usuário (compacto)
+    // Tagline
+    doc.setTextColor(darkGray[0], darkGray[1], darkGray[2])
+    doc.setFontSize(7)
+    doc.setFont('helvetica', 'italic')
+    doc.text('Simplificando o direito para todos', margin, leftY)
+    leftY += 8
+    
+    // Informações do usuário
     if (userName && userCPF) {
       doc.setTextColor(0, 0, 0)
-      doc.setFontSize(6)
+      doc.setFontSize(7)
       doc.setFont('helvetica', 'normal')
-      // Mostrar CPF completo para identificação e rastreabilidade
-      const userInfo = `${userName} | CPF: ${userCPF}`
-      doc.text(userInfo, margin, leftY, { maxWidth: pageWidth / 2 - margin - 5 })
+      doc.text(`Cliente: ${userName}`, margin, leftY)
+      leftY += 5
+      doc.text(`CPF: ${userCPF}`, margin, leftY)
     }
     
-    // Lado direito do rodapé (compacto)
-    let rightY = footerTop + 8
+    // Lado direito do rodapé
+    let rightY = footerTop + 10
     
-    // Número da página
-    doc.setTextColor(100, 100, 100)
-    doc.setFontSize(7)
+    // Informações legais
+    doc.setTextColor(darkGray[0], darkGray[1], darkGray[2])
+    doc.setFontSize(6)
     doc.setFont('helvetica', 'normal')
-    doc.text(`Página ${i} de ${totalPages}`, pageWidth - margin, rightY, { align: 'right' })
+    doc.text('Documento gerado automaticamente', pageWidth - margin, rightY, { align: 'right' })
     rightY += 5
+    doc.text('Este documento é uma tradução simplificada', pageWidth - margin, rightY, { align: 'right' })
+    rightY += 5
+    doc.text('do texto jurídico original', pageWidth - margin, rightY, { align: 'right' })
+    rightY += 8
     
-    // Site
+    // Site e contato
     doc.setTextColor(primaryColor[0], primaryColor[1], primaryColor[2])
     doc.setFontSize(7)
     doc.setFont('helvetica', 'bold')
     doc.text('traduzsum.com.br', pageWidth - margin, rightY, { align: 'right' })
+    rightY += 5
+    
+    // Número da página (centralizado na parte inferior)
+    doc.setTextColor(120, 120, 120)
+    doc.setFontSize(8)
+    doc.setFont('helvetica', 'normal')
+    const pageText = `${i} / ${totalPages}`
+    const pageTextWidth = doc.getTextWidth(pageText)
+    doc.text(pageText, (pageWidth - pageTextWidth) / 2, pageHeight - 8)
   }
 
   // Salvar PDF

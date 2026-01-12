@@ -87,7 +87,8 @@ export async function GET(request: NextRequest) {
             },
             take: 1,
             select: {
-              currentPeriodEnd: true
+              currentPeriodEnd: true,
+              cancelAtPeriodEnd: true
             }
           }
         }
@@ -122,7 +123,8 @@ export async function GET(request: NextRequest) {
       plan: user.plan,
       credits: user.credits || 0,
       memberSince: user.createdAt,
-      subscriptionEnd: user.subscriptions[0]?.currentPeriodEnd || null
+      subscriptionEnd: user.subscriptions[0]?.currentPeriodEnd || null,
+      cancelAtPeriodEnd: user.subscriptions[0]?.cancelAtPeriodEnd || false
     })
   } catch (error) {
     console.error('Erro ao buscar uso:', error)

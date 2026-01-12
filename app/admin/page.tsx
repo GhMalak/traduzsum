@@ -28,6 +28,8 @@ export default function AdminPage() {
     anual: 0,
     creditos: 0
   })
+  const [adminTranslations, setAdminTranslations] = useState<any[]>([])
+  const [loadingTranslations, setLoadingTranslations] = useState(false)
 
   useEffect(() => {
     if (!authLoading && !user) {
@@ -38,6 +40,7 @@ export default function AdminPage() {
     if (user) {
       checkAdmin()
       fetchUsers()
+      fetchAdminTranslations()
     }
   }, [user, authLoading, router])
 
@@ -102,6 +105,31 @@ export default function AdminPage() {
       console.error('Erro ao buscar usuários:', error)
     } finally {
       setLoading(false)
+    }
+  }
+
+  const fetchAdminTranslations = async () => {
+    try {
+      setLoadingTranslations(true)
+      const response = await fetch('/api/admin/translations')
+      if (response.ok) {
+        const contentType = response.headers.get('content-type')
+        if (contentType && contentType.includes('application/json')) {
+          const text = await response.text()
+          if (text.trim()) {
+            try {
+              const data = JSON.parse(text)
+              setAdminTranslations(data.translations || [])
+            } catch (parseError) {
+              console.error('Erro ao parsear JSON:', parseError)
+            }
+          }
+        }
+      }
+    } catch (error) {
+      console.error('Erro ao buscar traduções:', error)
+    } finally {
+      setLoadingTranslations(false)
     }
   }
 
@@ -279,6 +307,97 @@ export default function AdminPage() {
           {users.length === 0 && (
             <div className="p-8 text-center text-gray-500">
               Nenhum usuário cadastrado ainda.
+            </div>
+          )}
+        </div>
+
+        {/* Traduções (Sem Dados Pessoais) */}
+        <div className="bg-white rounded-xl shadow-lg overflow-hidden mt-8">
+          <div className="p-6 border-b border-gray-200">
+            <h2 className="text-2xl font-bold text-gray-900">Todas as Traduções</h2>
+            <p className="text-gray-600 text-sm mt-1">
+              Total: {adminTranslations.length} traduções (sem dados pessoais - prontas para venda)
+            </p>
+          </div>
+
+          {loadingTranslations ? (
+            <div className="p-8 text-center">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600 mx-auto"></div>
+            </div>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead className="bg-gray-50">
+                  <tr>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Título</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tipo</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tamanho</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Páginas</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Data</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Ações</th>
+                  </tr>
+                </thead>
+                <tbody className="bg-white divide-y divide-gray-200">
+                  {adminTranslations.map((translation) => (
+                    <tr key={translation.id} className="hover:bg-gray-50">
+                      <td className="px-6 py-4">
+                        <div className="text-sm font-medium text-gray-900 max-w-xs truncate">
+                          {translation.title || 'Sem título'}
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <span className={`px-2 py-1 text-xs font-semibold rounded-full ${
+                          translation.type === 'pdf' ? 'bg-blue-100 text-blue-800' : 'bg-green-100 text-green-800'
+                        }`}>
+                          {translation.type === 'pdf' ? 'PDF' : 'Texto'}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="text-sm text-gray-500">
+                          {translation.textLength ? `${Math.round(translation.textLength / 1000)}k chars` : '-'}
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="text-sm text-gray-500">
+                          {translation.pages || '-'}
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="text-sm text-gray-500">
+                          {new Date(translation.createdAt).toLocaleDateString('pt-BR')}
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                        <button
+                          onClick={() => {
+                            if (translation.translatedText) {
+                              const blob = new Blob([translation.translatedText], { type: 'text/plain' })
+                              const url = URL.createObjectURL(blob)
+                              const a = document.createElement('a')
+                              a.href = url
+                              a.download = `${translation.title || 'traducao'}_${translation.id}.txt`
+                              document.body.appendChild(a)
+                              a.click()
+                              document.body.removeChild(a)
+                              URL.revokeObjectURL(url)
+                            }
+                          }}
+                          className="text-primary-600 hover:text-primary-900"
+                          disabled={!translation.translatedText}
+                        >
+                          Baixar
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+
+          {!loadingTranslations && adminTranslations.length === 0 && (
+            <div className="p-8 text-center text-gray-500">
+              Nenhuma tradução encontrada ainda.
             </div>
           )}
         </div>

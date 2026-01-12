@@ -114,7 +114,7 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const { text, pages } = await request.json()
+    const { text, pages, title } = await request.json()
 
     if (!text || typeof text !== 'string') {
       return NextResponse.json(
@@ -659,14 +659,21 @@ ${text}
     try {
       const translationType = pages ? 'pdf' : 'text'
       
+      // Extrair título do texto (primeiras palavras ou linha)
+      const firstLine = text.split('\n')[0].trim()
+      const extractedTitle = title || firstLine.substring(0, 100) || 'Tradução Jurídica'
+      
       await withPrisma(async (prisma: PrismaClient) => {
         await prisma.translation.create({
           data: {
             userId,
             type: translationType,
             textLength: text.length,
-            pages: pages || null
-          }
+            pages: pages || null,
+            title: extractedTitle,
+            originalText: text.substring(0, 50000), // Limitar tamanho
+            translatedText: translatedText.substring(0, 50000) // Limitar tamanho
+          } as any // Type assertion temporária até TypeScript atualizar
         })
 
         // Deduzir crédito se for plano de créditos
