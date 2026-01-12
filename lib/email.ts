@@ -12,15 +12,30 @@ const getTransporter = () => {
   const smtpUser = process.env.SMTP_USER?.trim()?.replace(/^["']|["']$/g, '') || ''
   const smtpPass = process.env.SMTP_PASS?.trim()?.replace(/^["']|["']$/g, '') || ''
 
-  return nodemailer.createTransport({
+  // Configuração específica para Gmail
+  const isGmail = smtpHost.includes('gmail.com')
+  
+  const transporterConfig: any = {
     host: smtpHost,
     port: smtpPort,
-    secure: false, // true para 465, false para outras portas
+    secure: smtpPort === 465, // true para 465, false para outras portas
     auth: {
       user: smtpUser,
       pass: smtpPass,
     },
-  })
+  }
+
+  // Configurações adicionais para Gmail
+  if (isGmail) {
+    transporterConfig.service = 'gmail'
+    // Gmail requer TLS
+    transporterConfig.requireTLS = true
+    transporterConfig.tls = {
+      rejectUnauthorized: false // Aceitar certificados auto-assinados se necessário
+    }
+  }
+
+  return nodemailer.createTransport(transporterConfig)
 }
 
 export async function sendResetPasswordEmail(email: string, resetToken: string): Promise<void> {
@@ -132,7 +147,18 @@ export async function sendResetPasswordEmail(email: string, resetToken: string):
     
     // Mensagens de erro mais específicas
     if (error.code === 'EAUTH') {
-      throw new Error('Erro de autenticação SMTP. Verifique SMTP_USER e SMTP_PASS')
+      const isGmail = process.env.SMTP_HOST?.includes('gmail.com')
+      let errorMsg = 'Erro de autenticação SMTP. '
+      
+      if (isGmail) {
+        errorMsg += 'Para Gmail, você precisa usar uma "App Password" (senha de app), não a senha normal da conta. '
+        errorMsg += 'Acesse: https://myaccount.google.com/apppasswords para gerar uma senha de app. '
+        errorMsg += 'Certifique-se de que a autenticação de dois fatores está ativada.'
+      } else {
+        errorMsg += 'Verifique se SMTP_USER e SMTP_PASS estão corretos.'
+      }
+      
+      throw new Error(errorMsg)
     } else if (error.code === 'ECONNECTION') {
       throw new Error('Erro de conexão SMTP. Verifique SMTP_HOST e SMTP_PORT')
     } else {
