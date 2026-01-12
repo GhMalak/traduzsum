@@ -368,25 +368,67 @@ export default function AdminPage() {
                         </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                        <button
-                          onClick={() => {
-                            if (translation.translatedText) {
-                              const blob = new Blob([translation.translatedText], { type: 'text/plain' })
-                              const url = URL.createObjectURL(blob)
-                              const a = document.createElement('a')
-                              a.href = url
-                              a.download = `${translation.title || 'traducao'}_${translation.id}.txt`
-                              document.body.appendChild(a)
-                              a.click()
-                              document.body.removeChild(a)
-                              URL.revokeObjectURL(url)
-                            }
-                          }}
-                          className="text-primary-600 hover:text-primary-900"
-                          disabled={!translation.translatedText}
-                        >
-                          Baixar
-                        </button>
+                        <div className="flex gap-2">
+                          <button
+                            onClick={async () => {
+                              if (!translation.translatedText) return
+                              
+                              try {
+                                const response = await fetch('/api/admin/translations/download-pdf', {
+                                  method: 'POST',
+                                  headers: { 'Content-Type': 'application/json' },
+                                  credentials: 'include',
+                                  body: JSON.stringify({ translationId: translation.id })
+                                })
+                                
+                                const data = await response.json()
+                                
+                                if (!response.ok) {
+                                  throw new Error(data.error || 'Erro ao preparar download')
+                                }
+                                
+                                // Importar generatePDF dinamicamente
+                                const { generatePDF } = await import('@/lib/utils/pdf')
+                                
+                                generatePDF({
+                                  title: data.title,
+                                  translatedText: data.translatedText,
+                                  fileName: data.fileName,
+                                  userName: data.userName,
+                                  userCPF: data.userCPF
+                                })
+                              } catch (error: any) {
+                                console.error('Erro ao baixar PDF:', error)
+                                alert(error.message || 'Erro ao baixar PDF')
+                              }
+                            }}
+                            className="px-3 py-1 bg-primary-600 text-white rounded hover:bg-primary-700 transition-colors text-xs font-medium"
+                            disabled={!translation.translatedText}
+                            title="Baixar como PDF"
+                          >
+                            PDF
+                          </button>
+                          <button
+                            onClick={() => {
+                              if (translation.translatedText) {
+                                const blob = new Blob([translation.translatedText], { type: 'text/plain' })
+                                const url = URL.createObjectURL(blob)
+                                const a = document.createElement('a')
+                                a.href = url
+                                a.download = `${translation.title || 'traducao'}_${translation.id}.txt`
+                                document.body.appendChild(a)
+                                a.click()
+                                document.body.removeChild(a)
+                                URL.revokeObjectURL(url)
+                              }
+                            }}
+                            className="px-3 py-1 bg-gray-600 text-white rounded hover:bg-gray-700 transition-colors text-xs font-medium"
+                            disabled={!translation.translatedText}
+                            title="Baixar como TXT"
+                          >
+                            TXT
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   ))}

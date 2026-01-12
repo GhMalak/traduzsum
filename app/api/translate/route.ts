@@ -6,6 +6,60 @@ import { PrismaClient } from '@prisma/client'
 
 export const dynamic = 'force-dynamic'
 
+// Função para extrair título específico de súmulas e jurisprudências
+function extractLegalTitle(text: string, providedTitle?: string): string {
+  if (providedTitle && providedTitle.trim()) {
+    return providedTitle.trim().substring(0, 150)
+  }
+
+  const lines = text.split('\n').map(l => l.trim()).filter(l => l.length > 0)
+  
+  // Padrões comuns em textos jurídicos
+  const patterns = [
+    /^(?:SÚMULA|Súmula|SUMULA)\s*(?:N[º°]?\.?\s*)?(\d+)/i,
+    /^(?:SÚMULA|Súmula)\s*(?:VINCULANTE|Vinculante)?\s*(?:N[º°]?\.?\s*)?(\d+)/i,
+    /^(?:JURISPRUDÊNCIA|Jurisprudência)\s*(?:N[º°]?\.?\s*)?(\d+)/i,
+    /^(?:ACÓRDÃO|Acórdão)\s*(?:N[º°]?\.?\s*)?(\d+)/i,
+    /^(?:DECISÃO|Decisão)\s*(?:N[º°]?\.?\s*)?(\d+)/i,
+    /^ST[FJ]\s*-\s*(?:SÚMULA|Súmula)?\s*N[º°]?\.?\s*(\d+)/i,
+    /^T[CS]U\s*-\s*(?:SÚMULA|Súmula)?\s*N[º°]?\.?\s*(\d+)/i,
+  ]
+
+  // Procurar padrões nas primeiras linhas
+  for (let i = 0; i < Math.min(10, lines.length); i++) {
+    for (const pattern of patterns) {
+      const match = lines[i].match(pattern)
+      if (match) {
+        // Pegar a linha completa ou próximas linhas relevantes
+        let title = lines[i]
+        if (i + 1 < lines.length && lines[i + 1].length < 100) {
+          title += ' - ' + lines[i + 1]
+        }
+        return title.substring(0, 150)
+      }
+    }
+    
+    // Se a linha começa com números ou siglas de tribunais
+    if (lines[i].match(/^(STF|STJ|TST|TSE|TCU|TRF|TJ|TRT)/i)) {
+      let title = lines[i]
+      if (i + 1 < lines.length && lines[i + 1].length < 100) {
+        title += ' - ' + lines[i + 1]
+      }
+      return title.substring(0, 150)
+    }
+  }
+
+  // Se não encontrou padrão, usar primeira linha significativa
+  for (const line of lines) {
+    if (line.length > 20 && line.length < 150 && !line.match(/^(art\.|artigo|lei|decreto)/i)) {
+      return line.substring(0, 150)
+    }
+  }
+
+  // Fallback: primeira linha ou "Tradução Jurídica"
+  return lines[0]?.substring(0, 150) || 'Tradução Jurídica'
+}
+
 export async function POST(request: NextRequest) {
   try {
     // Verificar autenticação (cookie ou header)
@@ -659,9 +713,8 @@ ${text}
     try {
       const translationType = pages ? 'pdf' : 'text'
       
-      // Extrair título do texto (primeiras palavras ou linha)
-      const firstLine = text.split('\n')[0].trim()
-      const extractedTitle = title || firstLine.substring(0, 100) || 'Tradução Jurídica'
+      // Extrair título específico da súmula/jurisprudência
+      const extractedTitle = extractLegalTitle(text, title)
       
       await withPrisma(async (prisma: PrismaClient) => {
         await prisma.translation.create({
