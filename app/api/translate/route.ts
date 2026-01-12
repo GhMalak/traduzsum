@@ -3,6 +3,11 @@ import Groq from 'groq-sdk'
 import { verifyToken } from '@/lib/auth'
 import { withPrisma } from '@/lib/db'
 import { PrismaClient } from '@prisma/client'
+import { 
+  findSimilarTranslations, 
+  formatSimilarExamples,
+  extractKeywords 
+} from '@/lib/utils/memory'
 
 export const dynamic = 'force-dynamic'
 
@@ -264,6 +269,22 @@ export async function POST(request: NextRequest) {
     const groq = new Groq({
       apiKey: apiKey,
     })
+
+    // Buscar traduções similares para usar como contexto (RAG)
+    let similarExamples = ''
+    try {
+      const similarTranslations = await withPrisma(async (prisma: PrismaClient) => {
+        return await findSimilarTranslations(prisma, text, 3)
+      })
+      
+      if (similarTranslations.length > 0) {
+        similarExamples = formatSimilarExamples(similarTranslations)
+        console.log(`📚 Encontradas ${similarTranslations.length} traduções similares para usar como contexto`)
+      }
+    } catch (memoryError) {
+      console.error('Erro ao buscar traduções similares:', memoryError)
+      // Continuar mesmo se falhar a busca de memória
+    }
 
     // Usa llama-3.1-8b-instant - modelo rápido, barato e eficiente para tradução jurídica
     // Alternativa: mixtral-8x7b-32768 (melhor qualidade, mas mais caro)
@@ -719,7 +740,7 @@ ${text}
 - Organize em parágrafos bem desenvolvidos, não em tópicos curtos
 - Seja conciso mas completo - desenvolva as ideias de forma natural
 - Destaque claramente TODAS as exceções e condições de forma integrada
-- Use linguagem acessível mas precisa, como se estivesse explicando para alguém leigo`,
+- Use linguagem acessível mas precisa, como se estivesse explicando para alguém leigo${similarExamples}`,
         },
       ],
       temperature: 0.0, // Temperatura MUITO baixa para máxima consistência e precisão
@@ -742,6 +763,9 @@ ${text}
       // Extrair título específico da súmula/jurisprudência
       const extractedTitle = extractLegalTitle(text, title)
       
+      // Extrair palavras-chave para busca semântica futura
+      const keywords = extractKeywords(text).join(', ')
+      
       await withPrisma(async (prisma: PrismaClient) => {
         await prisma.translation.create({
           data: {
@@ -751,7 +775,8 @@ ${text}
             pages: pages || null,
             title: extractedTitle,
             originalText: text.substring(0, 50000), // Limitar tamanho
-            translatedText: translatedText.substring(0, 50000) // Limitar tamanho
+            translatedText: translatedText.substring(0, 50000), // Limitar tamanho
+            keywords: keywords.substring(0, 1000) // Armazenar palavras-chave
           } as any // Type assertion temporária até TypeScript atualizar
         })
 

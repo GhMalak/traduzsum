@@ -35,6 +35,8 @@ model Translation {
   title         String?  // Título/nome da súmula ou jurisprudência
   originalText  String?  @db.Text // Texto original
   translatedText String? @db.Text // Texto traduzido
+  keywords      String?  @db.Text // Palavras-chave extraídas para busca semântica
+  qualityScore  Float?   // Score de qualidade (0-1) baseado em feedback
   createdAt     DateTime @default(now()) @db.Timestamp(6)
 
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
