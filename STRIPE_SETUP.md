@@ -21,8 +21,9 @@ Adicione as seguintes variáveis no arquivo `.env.local` (local) e no Vercel (pr
 
 ```env
 # Stripe
-STRIPE_SECRET_KEY=sk_test_... # Use sk_live_... em produção
-STRIPE_WEBHOOK_SECRET=whsec_... # Obtido após criar webhook
+STRIPE_SECRET_KEY=sk_test_... # Use sk_live_... em produção (Backend - obrigatória)
+NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=pk_test_... # Use pk_live_... em produção (Frontend - opcional)
+STRIPE_WEBHOOK_SECRET=whsec_... # Obtido após criar webhook (Backend - obrigatória)
 NEXT_PUBLIC_STRIPE_PRICE_MENSAL=price_...
 NEXT_PUBLIC_STRIPE_PRICE_ANUAL=price_...
 NEXT_PUBLIC_STRIPE_PRICE_CREDITOS=price_...
