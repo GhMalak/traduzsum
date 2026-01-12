@@ -1,11 +1,107 @@
 import { NextRequest, NextResponse } from 'next/server'
 import Groq from 'groq-sdk'
+import { verifyToken } from '@/lib/auth'
+import { withPrisma } from '@/lib/db'
+import { PrismaClient } from '@prisma/client'
 
 export const dynamic = 'force-dynamic'
 
 export async function POST(request: NextRequest) {
   try {
-    const { text } = await request.json()
+    // Verificar autenticação (cookie ou header)
+    const token = request.cookies.get('auth-token')?.value || 
+                  request.headers.get('authorization')?.replace('Bearer ', '')
+    
+    if (!token) {
+      return NextResponse.json(
+        { error: 'Token não fornecido' },
+        { status: 401 }
+      )
+    }
+
+    const decoded = verifyToken(token)
+    if (!decoded || !decoded.userId) {
+      return NextResponse.json(
+        { error: 'Token inválido' },
+        { status: 401 }
+      )
+    }
+
+    const userId = decoded.userId
+
+    // Buscar informações do usuário e validar limites
+    let user: { plan: string; credits: number | null } | null = null
+    let limitError: { error: string; status: number } | null = null
+
+    try {
+      await withPrisma(async (prisma: PrismaClient) => {
+        const foundUser = await prisma.user.findUnique({
+          where: { id: userId },
+          select: { plan: true, credits: true }
+        })
+
+        if (!foundUser) {
+          limitError = { error: 'Usuário não encontrado', status: 404 }
+          return
+        }
+
+        // Validar limites baseados no plano
+        const today = new Date()
+        today.setHours(0, 0, 0, 0)
+
+        if (foundUser.plan === 'Gratuito') {
+          // Plano gratuito: 2 traduções por dia
+          const translationsToday = await prisma.translation.count({
+            where: {
+              userId,
+              createdAt: { gte: today }
+            }
+          })
+
+          if (translationsToday >= 2) {
+            limitError = {
+              error: 'Limite diário atingido. Você pode fazer até 2 traduções por dia no plano gratuito. Faça upgrade para traduções ilimitadas!',
+              status: 403
+            }
+            return
+          }
+        } else if (foundUser.plan === 'Créditos') {
+          // Plano de créditos: verificar se tem créditos
+          if (!foundUser.credits || foundUser.credits <= 0) {
+            limitError = {
+              error: 'Você não tem créditos disponíveis. Compre mais créditos para continuar traduzindo.',
+              status: 403
+            }
+            return
+          }
+        }
+        // Mensal e Anual têm traduções ilimitadas
+
+        user = foundUser
+      })
+    } catch (error) {
+      console.error('Erro ao validar limites:', error)
+      return NextResponse.json(
+        { error: 'Erro ao validar limites do usuário' },
+        { status: 500 }
+      )
+    }
+
+    if (limitError) {
+      return NextResponse.json(
+        { error: limitError.error },
+        { status: limitError.status }
+      )
+    }
+
+    if (!user) {
+      return NextResponse.json(
+        { error: 'Usuário não encontrado' },
+        { status: 404 }
+      )
+    }
+
+    const { text, pages } = await request.json()
 
     if (!text || typeof text !== 'string') {
       return NextResponse.json(
@@ -432,6 +528,37 @@ ${text}
         { error: 'Não foi possível gerar a tradução' },
         { status: 500 }
       )
+    }
+
+    // Registrar uso da tradução
+    try {
+      const translationType = pages ? 'pdf' : 'text'
+      
+      await withPrisma(async (prisma: PrismaClient) => {
+        await prisma.translation.create({
+          data: {
+            userId,
+            type: translationType,
+            textLength: text.length,
+            pages: pages || null
+          }
+        })
+
+        // Deduzir crédito se for plano de créditos
+        if (user.plan === 'Créditos' && user.credits && user.credits > 0) {
+          await prisma.user.update({
+            where: { id: userId },
+            data: {
+              credits: {
+                decrement: 1
+              }
+            }
+          })
+        }
+      })
+    } catch (trackingError) {
+      console.error('Erro ao registrar uso:', trackingError)
+      // Não falhar a requisição se o tracking falhar
     }
 
     return NextResponse.json({ result: translatedText })

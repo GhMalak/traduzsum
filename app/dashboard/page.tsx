@@ -8,15 +8,45 @@ import { useRouter } from 'next/navigation'
 export default function DashboardPage() {
   const { user, logout, loading: authLoading } = useAuth()
   const router = useRouter()
-  const [translationsToday, setTranslationsToday] = useState(1)
+  const [translationsToday, setTranslationsToday] = useState(0)
   const [translationsLimit, setTranslationsLimit] = useState(2)
+  const [totalTranslations, setTotalTranslations] = useState(0)
   const [expiresAt, setExpiresAt] = useState<string | null>(null)
+  const [loadingUsage, setLoadingUsage] = useState(true)
+  const [userCredits, setUserCredits] = useState(0)
 
   useEffect(() => {
     if (!authLoading && !user) {
       router.push('/login')
     }
   }, [user, authLoading, router])
+
+  // Buscar dados de uso
+  useEffect(() => {
+    if (user) {
+      fetch('/api/usage')
+          .then(res => res.json())
+          .then(data => {
+            if (data.error) {
+              console.error('Erro ao buscar uso:', data.error)
+            } else {
+              setTranslationsToday(data.translationsToday || 0)
+              setTranslationsLimit(data.dailyLimit || 2)
+              setTotalTranslations(data.totalTranslations || 0)
+              setUserCredits(data.credits || 0)
+              if (data.subscriptionEnd) {
+                setExpiresAt(data.subscriptionEnd)
+              }
+            }
+          })
+          .catch(err => {
+            console.error('Erro ao buscar estatísticas:', err)
+          })
+          .finally(() => {
+            setLoadingUsage(false)
+          })
+    }
+  }, [user])
 
   if (authLoading) {
     return (
@@ -54,7 +84,6 @@ export default function DashboardPage() {
   }
 
   const currentPlan = planInfo[user.plan]
-  const userCredits = user.credits || 0
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50">
@@ -116,21 +145,30 @@ export default function DashboardPage() {
           {user.plan === 'Gratuito' && (
             <div className="bg-white rounded-2xl shadow-lg p-6">
               <h2 className="text-xl font-semibold text-gray-800 mb-4">Traduções Hoje</h2>
-              <div className="mb-4">
-                <div className="flex justify-between text-sm text-gray-600 mb-2">
-                  <span>Usadas</span>
-                  <span>{translationsToday} / {translationsLimit}</span>
+              {loadingUsage ? (
+                <div className="animate-pulse space-y-2">
+                  <div className="h-4 bg-gray-200 rounded w-3/4"></div>
+                  <div className="h-3 bg-gray-200 rounded"></div>
                 </div>
-                <div className="w-full bg-gray-200 rounded-full h-3">
-                  <div
-                    className="bg-primary-600 h-3 rounded-full transition-all"
-                    style={{ width: `${(translationsToday / translationsLimit) * 100}%` }}
-                  ></div>
-                </div>
-              </div>
-              <p className="text-sm text-gray-600">
-                {translationsLimit - translationsToday} traduções restantes hoje
-              </p>
+              ) : (
+                <>
+                  <div className="mb-4">
+                    <div className="flex justify-between text-sm text-gray-600 mb-2">
+                      <span>Usadas</span>
+                      <span>{translationsToday} / {translationsLimit}</span>
+                    </div>
+                    <div className="w-full bg-gray-200 rounded-full h-3">
+                      <div
+                        className="bg-primary-600 h-3 rounded-full transition-all"
+                        style={{ width: `${Math.min((translationsToday / translationsLimit) * 100, 100)}%` }}
+                      ></div>
+                    </div>
+                  </div>
+                  <p className="text-sm text-gray-600">
+                    {Math.max(translationsLimit - translationsToday, 0)} traduções restantes hoje
+                  </p>
+                </>
+              )}
             </div>
           )}
 
@@ -138,14 +176,23 @@ export default function DashboardPage() {
           {user.plan === 'Créditos' && (
             <div className="bg-white rounded-2xl shadow-lg p-6">
               <h2 className="text-xl font-semibold text-gray-800 mb-4">Seus Créditos</h2>
-              <div className="text-4xl font-bold text-primary-600 mb-2">{userCredits}</div>
-              <p className="text-sm text-gray-600 mb-4">créditos disponíveis</p>
-              <Link
-                href="/planos"
-                className="block w-full text-center py-2 px-4 border-2 border-primary-600 text-primary-600 rounded-lg hover:bg-primary-50 transition-colors font-medium"
-              >
-                Comprar Mais
-              </Link>
+              {loadingUsage ? (
+                <div className="animate-pulse">
+                  <div className="h-10 bg-gray-200 rounded w-20 mb-2"></div>
+                  <div className="h-4 bg-gray-200 rounded w-32 mb-4"></div>
+                </div>
+              ) : (
+                <>
+                  <div className="text-4xl font-bold text-primary-600 mb-2">{userCredits}</div>
+                  <p className="text-sm text-gray-600 mb-4">créditos disponíveis</p>
+                  <Link
+                    href="/planos"
+                    className="block w-full text-center py-2 px-4 border-2 border-primary-600 text-primary-600 rounded-lg hover:bg-primary-50 transition-colors font-medium"
+                  >
+                    Comprar Mais
+                  </Link>
+                </>
+              )}
             </div>
           )}
 
@@ -174,16 +221,25 @@ export default function DashboardPage() {
           {/* Estatísticas */}
           <div className="bg-white rounded-2xl shadow-lg p-6">
             <h2 className="text-xl font-semibold text-gray-800 mb-4">Estatísticas</h2>
-            <div className="space-y-4">
-              <div>
-                <p className="text-sm text-gray-600">Total de traduções</p>
-                <p className="text-2xl font-bold text-gray-900">127</p>
+            {loadingUsage ? (
+              <div className="animate-pulse space-y-4">
+                <div className="h-8 bg-gray-200 rounded w-24"></div>
+                <div className="h-6 bg-gray-200 rounded w-32"></div>
               </div>
-              <div>
-                <p className="text-sm text-gray-600">Membro desde</p>
-                <p className="text-lg font-semibold text-gray-900">Jan 2025</p>
+            ) : (
+              <div className="space-y-4">
+                <div>
+                  <p className="text-sm text-gray-600">Total de traduções</p>
+                  <p className="text-2xl font-bold text-gray-900">{totalTranslations}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-gray-600">Membro desde</p>
+                  <p className="text-lg font-semibold text-gray-900">
+                    {user?.createdAt ? new Date(user.createdAt).toLocaleDateString('pt-BR', { month: 'short', year: 'numeric' }) : '-'}
+                  </p>
+                </div>
               </div>
-            </div>
+            )}
           </div>
         </div>
 
@@ -220,11 +276,6 @@ export default function DashboardPage() {
           </div>
         </div>
 
-        <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
-          <p className="text-yellow-800 text-sm">
-            <strong>Nota:</strong> O sistema de gerenciamento de planos e estatísticas está em desenvolvimento.
-          </p>
-        </div>
       </div>
     </div>
   )

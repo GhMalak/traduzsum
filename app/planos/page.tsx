@@ -1,10 +1,97 @@
 'use client'
 
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { useAuth } from '@/contexts/AuthContext'
+import { useRouter } from 'next/navigation'
 
 export default function PlanosPage() {
   const { user, logout } = useAuth()
+  const router = useRouter()
+  const [loadingPlan, setLoadingPlan] = useState<string | null>(null)
+  const [error, setError] = useState('')
+  const [priceIds, setPriceIds] = useState<{
+    mensal: string | null
+    anual: string | null
+    creditos: string | null
+  } | null>(null)
+
+  // Buscar Price IDs do Stripe
+  useEffect(() => {
+    fetch('/api/payment/prices')
+      .then(res => res.json())
+      .then(data => setPriceIds(data))
+      .catch(err => console.error('Erro ao buscar preços:', err))
+  }, [])
+
+  const handlePlanClick = async (planName: string) => {
+    if (!user) {
+      router.push('/login?redirect=/planos')
+      return
+    }
+
+    if (planName === 'Gratuito') {
+      return
+    }
+
+    setLoadingPlan(planName)
+    setError('')
+
+    try {
+      // Aguardar carregamento dos price IDs
+      if (!priceIds) {
+        const pricesRes = await fetch('/api/payment/prices')
+        const prices = await pricesRes.json()
+        setPriceIds(prices)
+      }
+
+      const currentPriceIds = priceIds || await fetch('/api/payment/prices').then(r => r.json())
+      
+      let priceId: string | null = null
+      if (planName === 'Mensal') {
+        priceId = currentPriceIds.mensal
+      } else if (planName === 'Anual') {
+        priceId = currentPriceIds.anual
+      } else if (planName === 'Créditos') {
+        priceId = currentPriceIds.creditos
+      }
+      
+      if (!priceId) {
+        setError(`Configuração de pagamento para ${planName} ainda não está completa. Verifique as variáveis de ambiente NEXT_PUBLIC_STRIPE_PRICE_*.`)
+        setLoadingPlan(null)
+        return
+      }
+
+      // Buscar token do cookie
+      const response = await fetch('/api/payment/checkout', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          plan: planName,
+          priceId: priceId
+        }),
+        credentials: 'include' // Incluir cookies
+      })
+
+      const data = await response.json()
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Erro ao criar sessão de pagamento')
+      }
+
+      // Redirecionar para o checkout do Stripe
+      if (data.url) {
+        window.location.href = data.url
+      }
+    } catch (err: any) {
+      console.error('Erro ao iniciar checkout:', err)
+      setError(err.message || 'Erro ao processar pagamento. Tente novamente.')
+      setLoadingPlan(null)
+    }
+  }
+
   const plans = [
     {
       name: 'Gratuito',
@@ -207,17 +294,28 @@ export default function PlanosPage() {
               </ul>
 
               <button
-                className={`w-full py-3.5 px-6 rounded-lg font-semibold transition-all duration-200 shadow-md hover:shadow-lg transform hover:scale-105 ${plan.buttonStyle}`}
-                onClick={() => {
-                  alert('Sistema de pagamento em desenvolvimento. Em breve você poderá assinar!')
-                }}
+                className={`w-full py-3.5 px-6 rounded-lg font-semibold transition-all duration-200 shadow-md hover:shadow-lg transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed ${plan.buttonStyle}`}
+                onClick={() => handlePlanClick(plan.name)}
+                disabled={loadingPlan === plan.name || plan.name === 'Gratuito'}
               >
                 <span className="flex items-center justify-center gap-2">
-                  {plan.buttonText}
-                  {plan.popular && (
-                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
-                    </svg>
+                  {loadingPlan === plan.name ? (
+                    <>
+                      <svg className="animate-spin h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                      </svg>
+                      Processando...
+                    </>
+                  ) : (
+                    <>
+                      {plan.buttonText}
+                      {plan.popular && (
+                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                        </svg>
+                      )}
+                    </>
                   )}
                 </span>
               </button>
@@ -225,15 +323,13 @@ export default function PlanosPage() {
           ))}
         </div>
 
-        <div className="mt-12 text-center">
-          <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-6 max-w-2xl mx-auto">
-            <p className="text-yellow-800 font-semibold mb-2">⚠️ Sistema de Pagamento em Desenvolvimento</p>
-            <p className="text-yellow-700 text-sm">
-              O sistema de pagamento e assinaturas está sendo desenvolvido. Atualmente, todos os planos são exibidos apenas para visualização.
-              Em breve você poderá assinar e fazer pagamentos diretamente pelo site.
-            </p>
+        {error && (
+          <div className="mt-8 text-center">
+            <div className="bg-red-50 border border-red-200 rounded-lg p-4 max-w-2xl mx-auto">
+              <p className="text-red-800 text-sm">{error}</p>
+            </div>
           </div>
-        </div>
+        )}
 
         <div className="mt-8 text-center">
           <Link href="/" className="text-primary-600 hover:text-primary-700 font-medium">

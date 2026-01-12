@@ -14,12 +14,70 @@ model User {
   cpf       String   @unique
   password  String
   plan      String   @default("Gratuito")
-  credits   Int?
+  credits   Int?     @default(0)
   createdAt DateTime @default(now()) @db.Timestamp(6)
   updatedAt DateTime @default(now()) @updatedAt @db.Timestamp(6)
 
+  translations Translation[]
+  subscriptions Subscription[]
+  payments     Payment[]
+
   @@index([cpf])
   @@index([email])
+}
+
+model Translation {
+  id        String   @id @default(cuid())
+  userId    String
+  type      String   // 'text' ou 'pdf'
+  textLength Int?    // Tamanho do texto (caracteres)
+  pages     Int?     // Número de páginas (se PDF)
+  createdAt DateTime @default(now()) @db.Timestamp(6)
+
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([createdAt])
+}
+
+model Subscription {
+  id              String   @id @default(cuid())
+  userId          String
+  plan            String   // 'Mensal' ou 'Anual'
+  status          String   // 'active', 'canceled', 'expired'
+  stripeCustomerId String? @unique
+  stripeSubscriptionId String? @unique
+  currentPeriodStart DateTime? @db.Timestamp(6)
+  currentPeriodEnd   DateTime? @db.Timestamp(6)
+  cancelAtPeriodEnd  Boolean  @default(false)
+  createdAt       DateTime @default(now()) @db.Timestamp(6)
+  updatedAt       DateTime @default(now()) @updatedAt @db.Timestamp(6)
+
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([stripeCustomerId])
+  @@index([stripeSubscriptionId])
+}
+
+model Payment {
+  id              String   @id @default(cuid())
+  userId          String
+  type            String   // 'subscription' ou 'credits'
+  amount          Float    // Valor em centavos (R$)
+  status          String   // 'pending', 'completed', 'failed'
+  stripePaymentId String?  @unique
+  stripeCheckoutId String? @unique
+  plan            String?  // Para assinaturas
+  credits         Int?     // Para compra de créditos
+  createdAt       DateTime @default(now()) @db.Timestamp(6)
+  updatedAt       DateTime @default(now()) @updatedAt @db.Timestamp(6)
+
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([stripePaymentId])
+  @@index([stripeCheckoutId])
 }
 
 model ResetToken {

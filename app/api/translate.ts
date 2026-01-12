@@ -1,10 +1,11 @@
-export async function translateJurisprudence(text: string): Promise<string> {
+export async function translateJurisprudence(text: string, pages?: number): Promise<string> {
   const response = await fetch('/api/translate', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
     },
-    body: JSON.stringify({ text }),
+    body: JSON.stringify({ text, pages }),
+    credentials: 'include', // Incluir cookies para autenticação
   })
 
   const contentType = response.headers.get('content-type')

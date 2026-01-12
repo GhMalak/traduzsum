@@ -24,6 +24,7 @@ export default function Home() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [fileName, setFileName] = useState('')
+  const [pdfPages, setPdfPages] = useState<number | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   // Verificar se é admin
@@ -107,6 +108,7 @@ export default function Home() {
       }
 
       setText(data.text)
+      setPdfPages(data.pages || null)
       setInputMode('text')
     } catch (err: any) {
       setError(err.message || 'Erro ao processar o PDF. Por favor, tente novamente.')
@@ -132,10 +134,12 @@ export default function Home() {
     setResult('')
 
     try {
-      const translated = await translateJurisprudence(text)
+      const translated = await translateJurisprudence(text, pdfPages || undefined)
       setResult(translated)
-    } catch (err) {
-      setError('Erro ao processar o texto. Por favor, tente novamente.')
+      // Limpar páginas após traduzir
+      setPdfPages(null)
+    } catch (err: any) {
+      setError(err.message || 'Erro ao processar o texto. Por favor, tente novamente.')
       console.error(err)
     } finally {
       setLoading(false)
@@ -147,6 +151,7 @@ export default function Home() {
     setResult('')
     setError('')
     setFileName('')
+    setPdfPages(null)
     if (fileInputRef.current) {
       fileInputRef.current.value = ''
     }
