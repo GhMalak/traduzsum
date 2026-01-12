@@ -59,7 +59,9 @@ export function extractKeywords(text: string): string[] {
     .slice(0, 10)
     .map(([word]) => word)
 
-  return [...new Set([...foundTerms, ...topWords])]
+  // Combinar e remover duplicatas
+  const allKeywords = [...foundTerms, ...topWords]
+  return Array.from(new Set(allKeywords))
 }
 
 /**
