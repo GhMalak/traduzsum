@@ -89,7 +89,7 @@ export async function POST(request: NextRequest) {
     const sessionParams: Stripe.Checkout.SessionCreateParams = {
       customer: customerId,
       mode: plan === 'Créditos' ? 'payment' : 'subscription',
-      payment_method_types: ['card'],
+      payment_method_types: ['card', 'pix'], // PIX para pagamentos no Brasil
       success_url: `${request.headers.get('origin') || process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/dashboard?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${request.headers.get('origin') || process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/planos?canceled=true`,
       metadata: {
