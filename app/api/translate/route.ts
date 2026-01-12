@@ -88,7 +88,12 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    if (limitError) {
+    // Type guard para verificar se limitError não é null
+    const hasLimitError = (err: LimitError | null): err is LimitError => {
+      return err !== null
+    }
+
+    if (hasLimitError(limitError)) {
       return NextResponse.json(
         { error: limitError.error },
         { status: limitError.status }
