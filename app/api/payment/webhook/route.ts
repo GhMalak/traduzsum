@@ -43,7 +43,8 @@ export async function POST(request: NextRequest) {
         if (session.mode === 'subscription') {
           // Assinatura criada
           const subscriptionId = session.subscription as string
-          const subscription = await stripe.subscriptions.retrieve(subscriptionId) as Stripe.Subscription
+          const subscriptionResponse = await stripe.subscriptions.retrieve(subscriptionId)
+          const subscription = subscriptionResponse as unknown as Stripe.Subscription
           const customerId = session.customer as string
           const userId = session.metadata?.userId
 
@@ -51,6 +52,11 @@ export async function POST(request: NextRequest) {
             console.error('userId não encontrado no metadata da sessão')
             break
           }
+
+          // Extrair propriedades com type assertion
+          const currentPeriodStart = (subscription as any).current_period_start as number
+          const currentPeriodEnd = (subscription as any).current_period_end as number
+          const cancelAtPeriodEnd = (subscription as any).cancel_at_period_end as boolean
 
           await withPrisma(async (prisma: PrismaClient) => {
             // Atualizar ou criar assinatura
@@ -60,9 +66,9 @@ export async function POST(request: NextRequest) {
               },
               update: {
                 status: 'active',
-                currentPeriodStart: new Date(subscription.current_period_start * 1000),
-                currentPeriodEnd: new Date(subscription.current_period_end * 1000),
-                cancelAtPeriodEnd: subscription.cancel_at_period_end
+                currentPeriodStart: new Date(currentPeriodStart * 1000),
+                currentPeriodEnd: new Date(currentPeriodEnd * 1000),
+                cancelAtPeriodEnd: cancelAtPeriodEnd
               },
               create: {
                 userId: userId,
@@ -70,9 +76,9 @@ export async function POST(request: NextRequest) {
                 status: 'active',
                 stripeCustomerId: customerId,
                 stripeSubscriptionId: subscriptionId,
-                currentPeriodStart: new Date(subscription.current_period_start * 1000),
-                currentPeriodEnd: new Date(subscription.current_period_end * 1000),
-                cancelAtPeriodEnd: subscription.cancel_at_period_end
+                currentPeriodStart: new Date(currentPeriodStart * 1000),
+                currentPeriodEnd: new Date(currentPeriodEnd * 1000),
+                cancelAtPeriodEnd: cancelAtPeriodEnd
               }
             })
 
@@ -174,13 +180,18 @@ export async function POST(request: NextRequest) {
                 })
               }
             } else {
+              // Extrair propriedades com type assertion
+              const currentPeriodStart = (subscription as any).current_period_start as number
+              const currentPeriodEnd = (subscription as any).current_period_end as number
+              const cancelAtPeriodEnd = (subscription as any).cancel_at_period_end as boolean
+
               await prisma.subscription.update({
                 where: { id: sub.id },
                 data: {
                   status: subscription.status === 'active' ? 'active' : 'expired',
-                  currentPeriodStart: new Date(subscription.current_period_start * 1000),
-                  currentPeriodEnd: new Date(subscription.current_period_end * 1000),
-                  cancelAtPeriodEnd: subscription.cancel_at_period_end
+                  currentPeriodStart: new Date(currentPeriodStart * 1000),
+                  currentPeriodEnd: new Date(currentPeriodEnd * 1000),
+                  cancelAtPeriodEnd: cancelAtPeriodEnd
                 }
               })
             }
