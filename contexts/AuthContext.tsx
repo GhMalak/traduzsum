@@ -10,6 +10,7 @@ interface User {
   cpf: string
   plan: 'Gratuito' | 'Mensal' | 'Anual' | 'Créditos'
   credits?: number
+  createdAt?: string
 }
 
 interface AuthContextType {

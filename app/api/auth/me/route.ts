@@ -39,7 +39,8 @@ export async function GET(request: NextRequest) {
         email: user.email,
         cpf: formatCPF(user.cpf),
         plan: user.plan,
-        credits: user.credits
+        credits: user.credits,
+        createdAt: user.createdAt.toISOString()
       }
     })
   } catch (error: any) {
