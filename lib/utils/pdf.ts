@@ -134,10 +134,11 @@ export function generatePDF({ title, translatedText, fileName = 'traducao', user
     yPosition = margin
   }
 
-  // Processar texto linha por linha para identificar títulos
+  // Processar texto linha por linha para identificar títulos e exceções
   const lines = translatedText.split('\n')
-  const lineHeight = 5
-  const titleSpacing = 2
+  const lineHeight = 5.5 // Aumentado para melhor legibilidade
+  const titleSpacing = 3
+  const paragraphSpacing = 3
   
   doc.setFontSize(10)
   doc.setFont('helvetica', 'normal')
@@ -151,55 +152,74 @@ export function generatePDF({ title, translatedText, fileName = 'traducao', user
     
     const trimmed = line.trim()
     
-    // Pular linhas vazias
+    // Pular linhas vazias (mas manter espaçamento)
     if (!trimmed) {
       yPosition += lineHeight / 2
       continue
     }
     
-    // Remover marcadores markdown, mas preservar estrutura
+    // Preservar negrito markdown para identificar títulos e exceções
+    const hasBold = trimmed.includes('**')
     let cleanLine = trimmed.replace(/\*\*/g, '').trim()
     
-    // Identificar se é um título:
-    // - Texto em maiúsculas seguido de dois pontos (ex: "DEFINIÇÃO:", "CONTEÚDO:", "EXCEÇÕES:")
-    // - Palavras curtas (até 30 caracteres) em maiúsculas terminando com :
-    // - Também verificar se originalmente estava em negrito markdown
+    // Identificar se é um título ou exceção:
+    // - Texto em maiúsculas seguido de dois pontos
+    // - Palavras curtas (até 40 caracteres) terminando com :
+    // - Contém palavras-chave: ATENÇÃO, IMPORTANTE, EXCEÇÃO, CONDIÇÃO, RESSALVA
     const wasBoldInMarkdown = trimmed.startsWith('**') && trimmed.endsWith('**')
+    const isException = /^(ATENÇÃO|IMPORTANTE|EXCEÇÃO|CONDIÇÃO|RESSALVA):/i.test(cleanLine)
     const isTitle = (
-      cleanLine.match(/^[A-ZÁÊÔÇ][A-ZÁÊÔÇ\s]+:$/) !== null || // TUDO MAIÚSCULO seguido de :
-      (cleanLine.length <= 30 && cleanLine.endsWith(':') && /^[A-ZÁÊÔÇ]/.test(cleanLine)) || // Título curto em maiúscula terminando com :
-      (wasBoldInMarkdown && cleanLine.endsWith(':')) // Estava em negrito e termina com :
+      cleanLine.match(/^[A-ZÁÊÔÇ][A-ZÁÊÔÇ\s]+:$/) !== null ||
+      (cleanLine.length <= 40 && cleanLine.endsWith(':') && /^[A-ZÁÊÔÇ]/.test(cleanLine)) ||
+      (wasBoldInMarkdown && cleanLine.endsWith(':'))
     )
     
-    if (isTitle) {
-      // Título em AZUL e negrito - FORÇAR cor azul
+    if (isException) {
+      // Exceções em DESTAQUE: vermelho escuro e negrito
+      doc.setFontSize(10.5)
+      doc.setFont('helvetica', 'bold')
+      doc.setTextColor(185, 28, 28) // Vermelho escuro para destaque
+      
+      const exceptionLines = doc.splitTextToSize(cleanLine, maxWidth)
+      exceptionLines.forEach((exceptionLine: string) => {
+        if (yPosition > pageHeight - footerSpace) {
+          doc.addPage()
+          yPosition = margin
+          doc.setTextColor(185, 28, 28)
+        }
+        doc.text(exceptionLine, margin, yPosition)
+        yPosition += lineHeight
+      })
+      
+      yPosition += 2
+      // Resetar para texto normal
+      doc.setFontSize(10)
+      doc.setFont('helvetica', 'normal')
+      doc.setTextColor(0, 0, 0)
+    } else if (isTitle) {
+      // Título em AZUL e negrito
       doc.setFontSize(11)
       doc.setFont('helvetica', 'bold')
-      // Usar azul (RGB: 59, 130, 246) - blue-500
-      doc.setTextColor(59, 130, 246)
+      doc.setTextColor(59, 130, 246) // Azul
       
       const titleLines = doc.splitTextToSize(cleanLine, maxWidth)
       titleLines.forEach((titleLine: string) => {
         if (yPosition > pageHeight - footerSpace) {
           doc.addPage()
           yPosition = margin
-          // Garantir cor azul ao criar nova página
           doc.setTextColor(59, 130, 246)
         }
-        // FORÇAR cor azul em cada linha do título
-        doc.setTextColor(59, 130, 246)
-        doc.setFont('helvetica', 'bold')
         doc.text(titleLine, margin, yPosition)
         yPosition += lineHeight
       })
       
       yPosition += titleSpacing
-      // Resetar para texto normal (preto)
+      // Resetar para texto normal
       doc.setFontSize(10)
       doc.setFont('helvetica', 'normal')
       doc.setTextColor(0, 0, 0)
     } else {
-      // Texto normal em PRETO
+      // Texto normal em PRETO - formatação limpa
       doc.setFontSize(10)
       doc.setFont('helvetica', 'normal')
       doc.setTextColor(0, 0, 0)
@@ -214,7 +234,7 @@ export function generatePDF({ title, translatedText, fileName = 'traducao', user
         yPosition += lineHeight
       })
       
-      yPosition += 2
+      yPosition += paragraphSpacing
     }
   }
 

@@ -318,6 +318,9 @@ export default function AdminPage() {
             <p className="text-gray-600 text-sm mt-1">
               Total: {adminTranslations.length} traduções (sem dados pessoais - prontas para venda)
             </p>
+            <p className="text-primary-600 text-sm mt-2 font-medium">
+              💡 Selecione a tradução desejada e clique em "PDF" para baixar
+            </p>
           </div>
 
           {loadingTranslations ? (
@@ -371,7 +374,10 @@ export default function AdminPage() {
                         <div className="flex gap-2">
                           <button
                             onClick={async () => {
-                              if (!translation.translatedText) return
+                              if (!translation.translatedText) {
+                                alert('Esta tradução não possui conteúdo para download')
+                                return
+                              }
                               
                               try {
                                 const response = await fetch('/api/admin/translations/download-pdf', {
@@ -399,32 +405,37 @@ export default function AdminPage() {
                                 })
                               } catch (error: any) {
                                 console.error('Erro ao baixar PDF:', error)
-                                alert(error.message || 'Erro ao baixar PDF')
+                                alert(error.message || 'Erro ao baixar PDF. Tente novamente.')
                               }
                             }}
-                            className="px-3 py-1 bg-primary-600 text-white rounded hover:bg-primary-700 transition-colors text-xs font-medium"
+                            className="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors text-sm font-semibold shadow-sm hover:shadow-md flex items-center gap-2"
                             disabled={!translation.translatedText}
-                            title="Baixar como PDF"
+                            title="Baixar esta tradução como PDF"
                           >
-                            PDF
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                            </svg>
+                            Baixar PDF
                           </button>
                           <button
                             onClick={() => {
-                              if (translation.translatedText) {
-                                const blob = new Blob([translation.translatedText], { type: 'text/plain' })
-                                const url = URL.createObjectURL(blob)
-                                const a = document.createElement('a')
-                                a.href = url
-                                a.download = `${translation.title || 'traducao'}_${translation.id}.txt`
-                                document.body.appendChild(a)
-                                a.click()
-                                document.body.removeChild(a)
-                                URL.revokeObjectURL(url)
+                              if (!translation.translatedText) {
+                                alert('Esta tradução não possui conteúdo para download')
+                                return
                               }
+                              const blob = new Blob([translation.translatedText], { type: 'text/plain' })
+                              const url = URL.createObjectURL(blob)
+                              const a = document.createElement('a')
+                              a.href = url
+                              a.download = `${translation.title || 'traducao'}_${translation.id}.txt`
+                              document.body.appendChild(a)
+                              a.click()
+                              document.body.removeChild(a)
+                              URL.revokeObjectURL(url)
                             }}
-                            className="px-3 py-1 bg-gray-600 text-white rounded hover:bg-gray-700 transition-colors text-xs font-medium"
+                            className="px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors text-sm font-semibold shadow-sm hover:shadow-md"
                             disabled={!translation.translatedText}
-                            title="Baixar como TXT"
+                            title="Baixar esta tradução como TXT"
                           >
                             TXT
                           </button>
