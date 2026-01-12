@@ -30,6 +30,34 @@ export async function POST(request: NextRequest) {
       )
     }
 
+    // Verificar se o domínio do email é permitido
+    const allowedDomains = [
+      'gmail.com',
+      'hotmail.com',
+      'outlook.com',
+      'yahoo.com',
+      'yahoo.com.br',
+      'live.com',
+      'msn.com',
+      'icloud.com',
+      'me.com',
+      'mac.com',
+      'uol.com.br',
+      'bol.com.br',
+      'terra.com.br',
+      'ig.com.br',
+      'globo.com',
+      'globo.com.br',
+    ]
+
+    const emailDomain = email.split('@')[1]?.toLowerCase()
+    if (!emailDomain || !allowedDomains.includes(emailDomain)) {
+      return NextResponse.json(
+        { error: 'Apenas emails de provedores conhecidos são aceitos (Gmail, Hotmail, Outlook, Yahoo, etc.)' },
+        { status: 400 }
+      )
+    }
+
     const user = await createUser(name, email, cpf, password)
     const token = generateToken(user.id, user.email)
 
