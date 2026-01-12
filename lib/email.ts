@@ -1,7 +1,7 @@
 import nodemailer from 'nodemailer'
 
 // Configuração do email (ajustar conforme seu provedor)
-const getTransporter = () => {
+const getTransporter = async () => {
   if (!process.env.SMTP_USER || !process.env.SMTP_PASS) {
     throw new Error('Configurações de SMTP não encontradas. Verifique as variáveis SMTP_USER e SMTP_PASS no .env')
   }
@@ -41,13 +41,14 @@ const getTransporter = () => {
   const transporter = nodemailer.createTransport(transporterConfig)
   
   // Verificar conexão (opcional, mas ajuda a identificar problemas cedo)
-  try {
-    await transporter.verify()
-    console.log('✅ Servidor SMTP verificado com sucesso')
-  } catch (verifyError: any) {
-    console.error('⚠️ Erro ao verificar servidor SMTP:', verifyError.message)
-    // Continuar mesmo assim - pode funcionar na hora de enviar
-  }
+  // Comentado para não bloquear se houver problema temporário de rede
+  // try {
+  //   await transporter.verify()
+  //   console.log('✅ Servidor SMTP verificado com sucesso')
+  // } catch (verifyError: any) {
+  //   console.error('⚠️ Erro ao verificar servidor SMTP:', verifyError.message)
+  //   // Continuar mesmo assim - pode funcionar na hora de enviar
+  // }
   
   return transporter
 }
