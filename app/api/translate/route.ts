@@ -87,7 +87,7 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    if (limitError) {
+    if (limitError !== null) {
       return NextResponse.json(
         { error: limitError.error },
         { status: limitError.status }
