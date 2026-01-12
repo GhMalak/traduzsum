@@ -77,8 +77,8 @@ export function calculateSimilarity(
   const set1 = new Set(keywords1.map(k => k.toLowerCase()))
   const set2 = new Set(keywords2.map(k => k.toLowerCase()))
   
-  const intersection = new Set([...set1].filter(x => set2.has(x)))
-  const union = new Set([...set1, ...set2])
+  const intersection = new Set(Array.from(set1).filter(x => set2.has(x)))
+  const union = new Set([...Array.from(set1), ...Array.from(set2)])
   
   const keywordSimilarity = union.size > 0 
     ? intersection.size / union.size 
