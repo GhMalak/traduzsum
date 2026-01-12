@@ -37,15 +37,14 @@ export async function POST(request: NextRequest) {
     let validationResult: ValidationResult | null = null
 
     try {
-      await withPrisma(async (prisma: PrismaClient) => {
+      const result = await withPrisma(async (prisma: PrismaClient): Promise<ValidationResult> => {
         const foundUser = await prisma.user.findUnique({
           where: { id: userId },
           select: { plan: true, credits: true }
         })
 
         if (!foundUser) {
-          validationResult = { success: false, error: 'Usuário não encontrado', status: 404 }
-          return
+          return { success: false, error: 'Usuário não encontrado', status: 404 }
         }
 
         // Validar limites baseados no plano
@@ -62,28 +61,27 @@ export async function POST(request: NextRequest) {
           })
 
           if (translationsToday >= 2) {
-            validationResult = {
+            return {
               success: false,
               error: 'Limite diário atingido. Você pode fazer até 2 traduções por dia no plano gratuito. Faça upgrade para traduções ilimitadas!',
               status: 403
             }
-            return
           }
         } else if (foundUser.plan === 'Créditos') {
           // Plano de créditos: verificar se tem créditos
           if (!foundUser.credits || foundUser.credits <= 0) {
-            validationResult = {
+            return {
               success: false,
               error: 'Você não tem créditos disponíveis. Compre mais créditos para continuar traduzindo.',
               status: 403
             }
-            return
           }
         }
         // Mensal e Anual têm traduções ilimitadas
 
-        validationResult = { success: true, user: foundUser }
+        return { success: true, user: foundUser }
       })
+      validationResult = result
     } catch (error) {
       console.error('Erro ao validar limites:', error)
       return NextResponse.json(
