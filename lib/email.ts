@@ -175,12 +175,22 @@ export async function sendResetPasswordEmail(email: string, resetToken: string):
     // Mensagens de erro mais específicas
     if (error.code === 'EAUTH') {
       const isGmail = process.env.SMTP_HOST?.includes('gmail.com')
-      let errorMsg = 'Erro de autenticação SMTP. '
+      let errorMsg = '❌ Erro de autenticação SMTP (535). '
       
       if (isGmail) {
-        errorMsg += 'Para Gmail, você precisa usar uma "App Password" (senha de app), não a senha normal da conta. '
-        errorMsg += 'Acesse: https://myaccount.google.com/apppasswords para gerar uma senha de app. '
-        errorMsg += 'Certifique-se de que a autenticação de dois fatores está ativada.'
+        errorMsg += '\n\n📋 INSTRUÇÕES PARA CORRIGIR:\n\n'
+        errorMsg += '1. Ative a autenticação de dois fatores:\n'
+        errorMsg += '   → https://myaccount.google.com/security\n\n'
+        errorMsg += '2. Gere uma App Password (senha de app):\n'
+        errorMsg += '   → https://myaccount.google.com/apppasswords\n'
+        errorMsg += '   → Selecione "Email" e "Outro (nome personalizado)"\n'
+        errorMsg += '   → Digite "TraduzSum" e clique em "Gerar"\n'
+        errorMsg += '   → COPIE a senha de 16 caracteres (SEM espaços)\n\n'
+        errorMsg += '3. Configure na Vercel:\n'
+        errorMsg += '   → Settings → Environment Variables\n'
+        errorMsg += '   → SMTP_PASS = [cole a App Password SEM espaços]\n\n'
+        errorMsg += '4. Faça REDEPLOY do projeto\n\n'
+        errorMsg += '⚠️ IMPORTANTE: Use a App Password, NÃO a senha normal do Gmail!'
       } else {
         errorMsg += 'Verifique se SMTP_USER e SMTP_PASS estão corretos.'
       }
