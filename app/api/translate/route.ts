@@ -30,9 +30,11 @@ export async function POST(request: NextRequest) {
     const userId = decoded.userId
 
     // Buscar informações do usuário e validar limites
-    type LimitError = { error: string; status: number }
-    let user: { plan: string; credits: number | null } | null = null
-    let limitError: LimitError | null = null
+    type ValidationResult = 
+      | { success: true; user: { plan: string; credits: number | null } }
+      | { success: false; error: string; status: number }
+
+    let validationResult: ValidationResult | null = null
 
     try {
       await withPrisma(async (prisma: PrismaClient) => {
@@ -42,7 +44,7 @@ export async function POST(request: NextRequest) {
         })
 
         if (!foundUser) {
-          limitError = { error: 'Usuário não encontrado', status: 404 }
+          validationResult = { success: false, error: 'Usuário não encontrado', status: 404 }
           return
         }
 
@@ -60,7 +62,8 @@ export async function POST(request: NextRequest) {
           })
 
           if (translationsToday >= 2) {
-            limitError = {
+            validationResult = {
+              success: false,
               error: 'Limite diário atingido. Você pode fazer até 2 traduções por dia no plano gratuito. Faça upgrade para traduções ilimitadas!',
               status: 403
             }
@@ -69,7 +72,8 @@ export async function POST(request: NextRequest) {
         } else if (foundUser.plan === 'Créditos') {
           // Plano de créditos: verificar se tem créditos
           if (!foundUser.credits || foundUser.credits <= 0) {
-            limitError = {
+            validationResult = {
+              success: false,
               error: 'Você não tem créditos disponíveis. Compre mais créditos para continuar traduzindo.',
               status: 403
             }
@@ -78,7 +82,7 @@ export async function POST(request: NextRequest) {
         }
         // Mensal e Anual têm traduções ilimitadas
 
-        user = foundUser
+        validationResult = { success: true, user: foundUser }
       })
     } catch (error) {
       console.error('Erro ao validar limites:', error)
@@ -88,17 +92,22 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Type guard para verificar se limitError não é null
-    const hasLimitError = (err: LimitError | null): err is LimitError => {
-      return err !== null
-    }
-
-    if (hasLimitError(limitError)) {
+    // Verificar resultado da validação
+    if (!validationResult) {
       return NextResponse.json(
-        { error: limitError.error },
-        { status: limitError.status }
+        { error: 'Erro ao validar limites do usuário' },
+        { status: 500 }
       )
     }
+
+    if (!validationResult.success) {
+      return NextResponse.json(
+        { error: validationResult.error },
+        { status: validationResult.status }
+      )
+    }
+
+    const user = validationResult.user
 
     if (!user) {
       return NextResponse.json(
