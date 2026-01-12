@@ -43,7 +43,7 @@ export async function POST(request: NextRequest) {
         if (session.mode === 'subscription') {
           // Assinatura criada
           const subscriptionId = session.subscription as string
-          const subscription = await stripe.subscriptions.retrieve(subscriptionId)
+          const subscription = await stripe.subscriptions.retrieve(subscriptionId) as Stripe.Subscription
           const customerId = session.customer as string
           const userId = session.metadata?.userId
 
