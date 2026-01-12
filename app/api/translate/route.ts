@@ -271,7 +271,7 @@ export async function POST(request: NextRequest) {
       model: 'llama-3.1-8b-instant',
       messages: [
         {
-          role: 'system',
+          role: 'user',
           content: `# IDENTIDADE E EXPERTISE
 
 Você é um TRADUTOR JURÍDICO ESPECIALIZADO de nível superior, com formação em Direito e Linguística, com mais de 20 anos de experiência em:
