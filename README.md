@@ -1,110 +1,246 @@
-# TraduzSum
+# 🏛️ TraduzSum
 
-Uma aplicação web moderna que traduz jurisprudências e súmulas complexas para uma linguagem simples e fácil de entender, utilizando inteligência artificial.
+> **Plataforma inteligente para tradução e simplificação de textos jurídicos brasileiros**
 
-## 🚀 Funcionalidades
+Uma aplicação web moderna que utiliza Inteligência Artificial para transformar jurisprudências, súmulas e decisões judiciais complexas em linguagem simples e acessível, democratizando o acesso ao conhecimento jurídico.
 
-- Interface simples e intuitiva
-- Tradução de textos jurídicos complexos para linguagem acessível
-- **Suporte para upload de PDFs** - Envie arquivos PDF diretamente
-- **Colar texto** - Cole textos jurídicos diretamente
-- Design moderno e responsivo
-- Suporte para jurisprudências, súmulas e decisões judiciais
+[![Next.js](https://img.shields.io/badge/Next.js-14.0-black?logo=next.js)](https://nextjs.org/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.3-blue?logo=typescript)](https://www.typescriptlang.org/)
+[![React](https://img.shields.io/badge/React-18.2-61DAFB?logo=react)](https://reactjs.org/)
+[![Prisma](https://img.shields.io/badge/Prisma-5.19-2D3748?logo=prisma)](https://www.prisma.io/)
+[![Tailwind CSS](https://img.shields.io/badge/Tailwind-3.4-38B2AC?logo=tailwind-css)](https://tailwindcss.com/)
+[![Stripe](https://img.shields.io/badge/Stripe-20.1-635BFF?logo=stripe)](https://stripe.com/)
 
-## 🛠️ Tecnologias
+---
 
-- **Next.js 14** - Framework React
-- **TypeScript** - Tipagem estática
-- **Tailwind CSS** - Estilização
-- **Groq API** - Processamento de linguagem natural (Llama 3.1 70B)
-- **pdf-parse** - Extração de texto de PDFs
+## 📋 Índice
 
-## 📦 Instalação
+- [Sobre o Projeto](#-sobre-o-projeto)
+- [Funcionalidades](#-funcionalidades)
+- [Tecnologias Utilizadas](#-tecnologias-utilizadas)
+- [Arquitetura](#-arquitetura)
+- [Pré-requisitos](#-pré-requisitos)
+- [Instalação](#-instalação)
+- [Configuração](#-configuração)
+- [Uso](#-uso)
+- [Estrutura do Projeto](#-estrutura-do-projeto)
+- [Features Técnicas](#-features-técnicas)
+- [Deploy](#-deploy)
+- [Contribuindo](#-contribuindo)
+- [Licença](#-licença)
 
-1. Clone o repositório ou navegue até o diretório do projeto
+---
 
-2. Instale as dependências:
-```bash
-npm install
+## 🎯 Sobre o Projeto
+
+O **TraduzSum** é uma plataforma SaaS desenvolvida para facilitar o entendimento de textos jurídicos complexos. Utilizando modelos de linguagem avançados (LLM) e técnicas de RAG (Retrieval Augmented Generation), o sistema traduz automaticamente jurisprudências, súmulas e decisões judiciais para uma linguagem clara e acessível, mantendo a precisão jurídica.
+
+### Problema Resolvido
+
+Muitas pessoas têm dificuldade em entender textos jurídicos devido à linguagem técnica e complexa. O TraduzSum resolve isso oferecendo traduções simplificadas que preservam o significado jurídico original, tornando o direito mais acessível para todos.
+
+---
+
+## ✨ Funcionalidades
+
+### 🔐 Autenticação e Usuários
+- Sistema completo de autenticação (registro, login, recuperação de senha)
+- Perfis de usuário com dashboard personalizado
+- Gestão de assinaturas e cancelamentos
+- Sistema de créditos para uso pontual
+
+### 📄 Tradução de Textos
+- **Tradução de texto colado**: Cole qualquer texto jurídico e receba a tradução simplificada
+- **Upload de PDFs**: Envie PDFs de até 30 páginas para tradução automática
+- **Extração inteligente**: Identificação automática de títulos, súmulas e jurisprudências
+- **Download em PDF**: Baixe suas traduções em PDF formatado profissionalmente
+
+### 🤖 Inteligência Artificial
+- **Modelo LLM**: Utiliza Llama 3.1 8B Instant via Groq API
+- **Sistema RAG**: Memória inteligente baseada em traduções anteriores
+- **Base de Conhecimento**: Integração com súmulas e jurisprudências importantes
+- **Tradução Contextual**: Melhora contínua baseada em exemplos similares
+
+### 💳 Pagamentos
+- Integração completa com Stripe
+- Planos mensais, anuais e sistema de créditos
+- Webhooks para sincronização de assinaturas
+- Gestão automática de limites e permissões
+
+### 📊 Dashboard e Analytics
+- Histórico completo de traduções
+- Estatísticas de uso
+- Download individual ou em lote
+- Painel administrativo para gestão de conteúdo
+
+---
+
+## 🛠️ Tecnologias Utilizadas
+
+### Frontend
+- **[Next.js 14](https://nextjs.org/)** - Framework React com App Router
+- **[React 18](https://reactjs.org/)** - Biblioteca UI
+- **[TypeScript](https://www.typescriptlang.org/)** - Tipagem estática
+- **[Tailwind CSS](https://tailwindcss.com/)** - Framework CSS utility-first
+- **[jsPDF](https://github.com/parallax/jsPDF)** - Geração de PDFs no cliente
+
+### Backend
+- **[Next.js API Routes](https://nextjs.org/docs/api-routes/introduction)** - API RESTful
+- **[Prisma ORM](https://www.prisma.io/)** - ORM para banco de dados
+- **[SQLite](https://www.sqlite.org/)** - Banco de dados (desenvolvimento)
+- **[PostgreSQL](https://www.postgresql.org/)** - Banco de dados (produção)
+
+### Inteligência Artificial
+- **[Groq API](https://groq.com/)** - Infraestrutura de LLM
+- **[Llama 3.1 8B Instant](https://llama.meta.com/)** - Modelo de linguagem
+- **Sistema RAG Customizado** - Retrieval Augmented Generation
+
+### Pagamentos e Integrações
+- **[Stripe](https://stripe.com/)** - Processamento de pagamentos
+- **[Nodemailer](https://nodemailer.com/)** - Envio de emails
+- **[JWT](https://jwt.io/)** - Autenticação via tokens
+- **[bcrypt](https://www.npmjs.com/package/bcryptjs)** - Hash de senhas
+
+### Utilitários
+- **[pdf-parse](https://www.npmjs.com/package/pdf-parse)** - Extração de texto de PDFs
+- **[jsonwebtoken](https://www.npmjs.com/package/jsonwebtoken)** - Geração de tokens JWT
+
+---
+
+## 🏗️ Arquitetura
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│                        Frontend (Next.js)                    │
+│  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐      │
+│  │   Páginas    │  │  Componentes │  │   Contextos  │      │
+│  └──────────────┘  └──────────────┘  └──────────────┘      │
+└─────────────────────────────────────────────────────────────┘
+                            │
+                            ▼
+┌─────────────────────────────────────────────────────────────┐
+│                    API Routes (Next.js)                      │
+│  ┌──────────┐  ┌──────────┐  ┌──────────┐  ┌──────────┐  │
+│  │  Auth    │  │ Translate│  │ Payment  │  │  Admin   │  │
+│  └──────────┘  └──────────┘  └──────────┘  └──────────┘  │
+└─────────────────────────────────────────────────────────────┘
+         │              │              │              │
+         ▼              ▼              ▼              ▼
+┌──────────────┐  ┌──────────────┐  ┌──────────────┐
+│   Prisma     │  │   Groq API    │  │    Stripe    │
+│   (Database) │  │     (LLM)     │  │  (Payments)  │
+└──────────────┘  └──────────────┘  └──────────────┘
 ```
 
-3. Configure a variável de ambiente:
-   - Crie um arquivo `.env.local` na raiz do projeto
-   - Adicione sua chave da API Groq:
-```
-GROQ_API_KEY=sua_chave_aqui
-```
+### Fluxo de Tradução
 
-4. Execute o servidor de desenvolvimento:
-```bash
-npm run dev
-```
+1. **Entrada**: Usuário envia texto ou PDF
+2. **Validação**: Sistema valida plano, limites e créditos
+3. **RAG**: Busca traduções similares na base de conhecimento
+4. **IA**: Processa texto com contexto jurídico relevante
+5. **Armazenamento**: Salva tradução com palavras-chave para RAG
+6. **Resposta**: Retorna tradução simplificada formatada
 
-5. Abra [http://localhost:3000](http://localhost:3000) no seu navegador
+---
 
-## 🔑 Obter API Key da Groq
+## 📦 Pré-requisitos
 
-1. Acesse [https://console.groq.com/](https://console.groq.com/)
-2. Crie uma conta ou faça login
-3. Vá para a seção de API Keys
-4. Crie uma nova chave de API
-5. Copie a chave e adicione no arquivo `.env.local`
+- **Node.js** 18.x ou superior
+- **npm** ou **yarn**
+- **Conta Groq** (para API key)
+- **Conta Stripe** (para pagamentos - opcional para desenvolvimento)
 
-**Modelo utilizado:** `llama-3.1-70b-versatile` - Melhor modelo para tarefas complexas como tradução jurídica
+---
 
-## 📝 Como Usar
+## 📖 Uso
 
-### Opção 1: Enviar PDF
-1. Clique na aba "Enviar PDF"
-2. Selecione ou arraste um arquivo PDF (máximo 10MB)
-3. O texto será extraído automaticamente
-4. Clique em "Traduzir"
-5. Veja a tradução simplificada no painel à direita
+### Tradução de Texto
 
-### Opção 2: Colar Texto
-1. Clique na aba "Colar Texto"
-2. Cole o texto jurídico (jurisprudência, súmula ou decisão) no campo de entrada
-3. Clique em "Traduzir"
-4. Aguarde o processamento pela IA
-5. Veja a tradução simplificada no painel à direita
-6. Use o botão "Copiar tradução" para copiar o resultado
+1. Faça login na plataforma
+2. Cole o texto jurídico no campo de entrada
+3. Clique em **"Traduzir"**
+4. Aguarde o processamento (alguns segundos)
+5. Visualize a tradução simplificada
+6. Baixe em PDF ou copie o texto
 
-## 🏗️ Build para Produção
+### Upload de PDF
 
-```bash
-npm run build
-npm start
-```
+1. Selecione o plano adequado (Mensal, Anual ou Créditos)
+2. Clique na aba **"Enviar PDF"**
+3. Arraste ou selecione um arquivo PDF (até 30 páginas)
+4. O texto será extraído automaticamente
+5. Clique em **"Traduzir"**
+6. Baixe o resultado em PDF formatado
 
-## 🚀 Deploy (Hospedagem)
+---
 
-### Recomendado: Vercel (Gratuito)
+## 🎨 Features Técnicas
 
-A **Vercel** é a melhor opção para hospedar aplicações Next.js:
-- ✅ **100% Gratuito** para projetos pessoais
-- ✅ Deploy automático via GitHub
-- ✅ HTTPS automático
-- ✅ CDN global
-- ✅ Suporte a variáveis de ambiente
+### Sistema RAG (Retrieval Augmented Generation)
+- Busca semântica de traduções similares
+- Extração inteligente de palavras-chave jurídicas
+- Cálculo de similaridade multi-métrica
+- Base de conhecimento com súmulas importantes
 
-#### Passos Rápidos:
+### Geração de PDFs
+- Layout profissional com identidade visual
+- Destaque automático de exceções e condições
+- Formatação ABNT
+- Informações do usuário e metadados
 
-1. **Crie um repositório no GitHub** e faça push do código
-2. **Acesse [vercel.com](https://vercel.com)** e faça login com GitHub
-3. **Importe seu repositório**
-4. **Adicione a variável de ambiente:**
-   - Nome: `GROQ_API_KEY`
-   - Valor: sua chave da Groq
-5. **Clique em Deploy** - Pronto! 🎉
+### Autenticação Segura
+- JWT tokens com expiração
+- Hash de senhas com bcrypt
+- Recuperação de senha via email
+- Validação de domínios de email
 
-📖 **Guia completo:** Veja o arquivo [DEPLOY.md](./DEPLOY.md) para instruções detalhadas.
+### Integração Stripe
+- Checkout sessions
+- Webhooks para sincronização
+- Gestão de assinaturas
+- Cancelamento agendado
 
-### Alternativas:
+---
 
-- **Netlify** - Também gratuito, boa alternativa
-- **Railway** - Barato ($5/mês), muito fácil
-- **Render** - Plano gratuito disponível
+## 🤝 Contribuindo
+
+Contribuições são bem-vindas! Sinta-se à vontade para:
+
+1. Fazer um Fork do projeto
+2. Criar uma branch para sua feature (`git checkout -b feature/AmazingFeature`)
+3. Commit suas mudanças (`git commit -m 'Add some AmazingFeature'`)
+4. Push para a branch (`git push origin feature/AmazingFeature`)
+5. Abrir um Pull Request
+
+---
 
 ## 📄 Licença
 
-Este projeto é de código aberto e está disponível sob a licença MIT.
+Este projeto está sob a licença MIT. Veja o arquivo [LICENSE](LICENSE) para mais detalhes.
+
+---
+
+## 👤 Autor
+
+**Seu Nome**
+
+- GitHub: [@seu-usuario](https://github.com/seu-usuario)
+- LinkedIn: [Seu Perfil](https://linkedin.com/in/seu-perfil)
+- Email: seu.email@exemplo.com
+
+---
+
+## 🙏 Agradecimentos
+
+- [Groq](https://groq.com/) pela infraestrutura de LLM
+- [Next.js](https://nextjs.org/) pela excelente framework
+- [Prisma](https://www.prisma.io/) pelo ORM poderoso
+- [Stripe](https://stripe.com/) pela solução de pagamentos
+
+---
+
+<div align="center">
+
+**⭐ Se este projeto foi útil, considere dar uma estrela! ⭐**
+
+</div>
