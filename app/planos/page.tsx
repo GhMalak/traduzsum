@@ -168,7 +168,7 @@ export default function PlanosPage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50">
       {/* Navigation */}
-      <nav className="bg-white shadow-sm border-b">
+      <nav className="bg-white shadow-sm border-b sticky top-0 z-50">
         <div className="container mx-auto px-4 py-4 max-w-6xl flex justify-between items-center">
           <Link href="/" className="text-2xl font-bold text-gray-900">
             Traduz<span className="text-primary-600">Sum</span>
@@ -218,7 +218,7 @@ export default function PlanosPage() {
           {plans.map((plan, index) => (
             <div
               key={index}
-              className={`bg-white rounded-2xl shadow-xl p-8 relative transition-all duration-300 hover:shadow-2xl hover:-translate-y-1 ${
+              className={`bg-white rounded-2xl shadow-xl p-8 relative transition-all duration-300 hover:shadow-2xl hover:-translate-y-1 flex flex-col ${
                 plan.popular 
                   ? 'ring-4 ring-primary-500 scale-105 border-2 border-primary-500' 
                   : 'border border-gray-200'
@@ -267,7 +267,7 @@ export default function PlanosPage() {
                 <p className="text-gray-600 text-sm font-medium">{plan.description}</p>
               </div>
 
-              <ul className="space-y-3 mb-8">
+              <ul className="space-y-3 mb-8 flex-grow">
                 {plan.features.map((feature, featureIndex) => {
                   // "Sem limites diários" e "Sem validade" são features positivas, não negativas
                   const isNegative = feature.includes('❌') || (feature.includes('Sem') && !feature.includes('Sem limites diários') && !feature.includes('Sem validade'))
@@ -313,7 +313,7 @@ export default function PlanosPage() {
               </ul>
 
               <button
-                className={`w-full py-3.5 px-6 rounded-lg font-semibold transition-all duration-200 shadow-md hover:shadow-lg transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed ${plan.buttonStyle}`}
+                className={`w-full py-3.5 px-6 rounded-lg font-semibold transition-all duration-200 shadow-md hover:shadow-lg transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed mt-auto ${plan.buttonStyle}`}
                 onClick={() => handlePlanClick(plan.name)}
                 disabled={loadingPlan === plan.name || plan.name === 'Gratuito'}
               >
