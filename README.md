@@ -224,9 +224,9 @@ Este projeto está sob a licença MIT. Veja o arquivo [LICENSE](LICENSE) para ma
 
 **Seu Nome**
 
-- GitHub: [@seu-usuario](https://github.com/seu-usuario)
-- LinkedIn: [Seu Perfil](https://linkedin.com/in/seu-perfil)
-- Email: seu.email@exemplo.com
+- GitHub: https://github.com/GhMalak/
+- LinkedIn: https://www.linkedin.com/in/ghmalak/
+- Email: gustavo.calasan@exemplo.com
 
 ---
 
