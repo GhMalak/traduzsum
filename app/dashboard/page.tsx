@@ -218,24 +218,42 @@ export default function DashboardPage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50">
       {/* Navigation */}
-      <nav className="bg-white shadow-sm border-b sticky top-0 z-50">
+      <nav className="bg-white shadow-md border-b sticky top-0 z-50">
         <div className="container mx-auto px-4 py-4 max-w-6xl flex justify-between items-center">
-          <Link href="/" className="text-2xl font-bold text-gray-900">
+          <Link href="/" className="text-2xl font-bold text-gray-900 hover:text-primary-600 transition-colors">
             Traduz<span className="text-primary-600">Sum</span>
           </Link>
-          <div className="flex gap-4 items-center">
-            <Link href="/planos" className="text-gray-600 hover:text-primary-600 font-medium">
+          <div className="flex gap-3 items-center">
+            <Link 
+              href="/planos" 
+              className="px-4 py-2 text-gray-700 hover:text-primary-600 font-medium rounded-lg hover:bg-gray-50 transition-all"
+            >
               Planos
             </Link>
-            <Link href="/dashboard" className="text-primary-600 font-medium">
-              Dashboard
-            </Link>
-            <button
-              onClick={logout}
-              className="text-gray-600 hover:text-primary-600 font-medium"
-            >
-              Sair
-            </button>
+            {user && (
+              <div className="flex items-center gap-3 ml-2 pl-3 border-l border-gray-200">
+                <Link 
+                  href="/dashboard" 
+                  className="px-4 py-2 text-primary-600 font-medium rounded-lg hover:bg-gray-50 transition-all"
+                >
+                  Dashboard
+                </Link>
+                <div className="flex items-center gap-2 px-3 py-2 bg-primary-50 rounded-lg border border-primary-100">
+                  <div className="w-8 h-8 bg-primary-600 rounded-full flex items-center justify-center text-white font-bold text-sm">
+                    {user.name.charAt(0).toUpperCase()}
+                  </div>
+                  <span className="text-gray-700 font-medium hidden sm:inline">
+                    {user.name.split(' ')[0]}
+                  </span>
+                </div>
+                <button
+                  onClick={logout}
+                  className="px-4 py-2 text-gray-600 hover:text-red-600 font-medium rounded-lg hover:bg-red-50 transition-all"
+                >
+                  Sair
+                </button>
+              </div>
+            )}
           </div>
         </div>
       </nav>
