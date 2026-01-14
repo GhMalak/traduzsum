@@ -8,6 +8,10 @@ import {
   formatSimilarExamples,
   extractKeywords 
 } from '@/lib/utils/memory'
+import {
+  findRelevantKnowledge,
+  formatKnowledgeForPrompt
+} from '@/lib/knowledge/legal-knowledge-base'
 
 export const dynamic = 'force-dynamic'
 
@@ -272,8 +276,25 @@ export async function POST(request: NextRequest) {
 
     // Buscar traduções similares para usar como contexto (RAG)
     let similarExamples = ''
+    let knowledgeContext = ''
+    
     try {
       if (text && text.trim().length >= 50) {
+        // Extrair palavras-chave do texto
+        const keywords = extractKeywords(text)
+        
+        // Buscar conhecimento relevante na base de conhecimento jurídico
+        try {
+          const relevantKnowledge = findRelevantKnowledge(text, keywords, 3)
+          if (relevantKnowledge && relevantKnowledge.length > 0) {
+            knowledgeContext = formatKnowledgeForPrompt(relevantKnowledge)
+            console.log(`✅ Base de Conhecimento: ${relevantKnowledge.length} itens relevantes encontrados`)
+          }
+        } catch (knowledgeError: any) {
+          console.error('⚠️ Erro ao buscar base de conhecimento (continuando):', knowledgeError?.message || knowledgeError)
+        }
+        
+        // Buscar traduções similares do banco de dados
         const similarTranslations = await withPrisma(async (prisma: PrismaClient) => {
           return await findSimilarTranslations(prisma, text, 3)
         })
@@ -745,7 +766,7 @@ ${text}
 - Organize em parágrafos bem desenvolvidos, não em tópicos curtos
 - Seja conciso mas completo - desenvolva as ideias de forma natural
 - Destaque claramente TODAS as exceções e condições de forma integrada
-- Use linguagem acessível mas precisa, como se estivesse explicando para alguém leigo${similarExamples}`,
+- Use linguagem acessível mas precisa, como se estivesse explicando para alguém leigo${knowledgeContext}${similarExamples}`,
         },
       ],
       temperature: 0.0, // Temperatura MUITO baixa para máxima consistência e precisão
